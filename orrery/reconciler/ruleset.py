@@ -95,3 +95,83 @@ def apply_rulesets(data: dict, base_dir: Path) -> dict:
     out["checks"] = list(merged.values())
     out.pop("rulesets", None)
     return out
+
+
+def _toml_str(value: str) -> str:
+    out = ['"']
+    for ch in str(value):
+        if ch in ('"', "\\"):
+            out.append("\\" + ch)
+        elif ch == "\n":
+            out.append("\\n")
+        else:
+            out.append(ch)
+    out.append('"')
+    return "".join(out)
+
+
+def promote_text(profile_text: str, canon_path: str | Path, profile_path: str | Path, version: str | None = None):
+    """Return (new_profile_text, action) for adopting or bumping a `[[rulesets]]` reference to
+    `canon_path` in the profile at `profile_path`, pinned to `version` (default: the canon's current
+    version). action is 'adopt' (a new reference added), 'bump' (an existing pin updated), or 'noop'
+    (already at that version). Promotion moves a rule reference; it enforces nothing."""
+    ruleset = load_ruleset(canon_path)
+    ver = str(version) if version else ruleset.version
+    profile_dir = os.path.dirname(os.path.abspath(str(profile_path)))
+    canon_abs = os.path.abspath(str(canon_path))
+    rel = os.path.relpath(canon_abs, profile_dir)
+
+    data = tomllib.loads(profile_text) if profile_text.strip() else {}
+    for ref in data.get("rulesets", []) or []:
+        rp = ref if isinstance(ref, str) else ref.get("path", "")
+        if not rp:
+            continue
+        ref_abs = rp if os.path.isabs(rp) else os.path.abspath(os.path.join(profile_dir, rp))
+        if ref_abs == canon_abs:
+            current_pin = None if isinstance(ref, str) else ref.get("pin")
+            if str(current_pin or "") == ver:
+                return profile_text, "noop"
+            return _bump_pin(profile_text, rp, ver), "bump"
+
+    nl = "\r\n" if "\r\n" in profile_text else "\n"
+    prefix = "" if (not profile_text or profile_text.endswith(("\n", "\r"))) else nl
+    block = f"{nl}[[rulesets]]{nl}path = {_toml_str(rel)}{nl}pin = {_toml_str(ver)}{nl}"
+    return profile_text + prefix + block, "adopt"
+
+
+def _bump_pin(text: str, path_val: str, version: str) -> str:
+    """Surgically set the `pin` of the `[[rulesets]]` block whose `path` equals path_val, leaving all
+    other bytes and comments intact."""
+    lines = text.splitlines(keepends=True)
+    blocks: list[dict] = []
+    cur: dict | None = None
+    for i, line in enumerate(lines):
+        stripped = line.strip()
+        if stripped.startswith("["):
+            if cur is not None:
+                cur["end"] = i
+                blocks.append(cur)
+            is_rs = stripped.replace(" ", "") == "[[rulesets]]"
+            cur = {"start": i, "end": len(lines), "is_rs": is_rs, "path_val": None, "path_line": None, "pin_line": None} if is_rs else None
+        elif cur is not None and "=" in line:
+            key, _, val = line.partition("=")
+            key = key.strip()
+            if key == "path":
+                cur["path_val"] = val.strip().strip('"').strip("'")
+                cur["path_line"] = i
+            elif key == "pin":
+                cur["pin_line"] = i
+    if cur is not None:
+        blocks.append(cur)
+
+    target = next((b for b in blocks if b["is_rs"] and b["path_val"] == path_val), None)
+    if target is None:
+        return text
+    nl = "\r\n" if "\r\n" in text else "\n"
+    pin_line = f"pin = {_toml_str(version)}{nl}"
+    if target["pin_line"] is not None:
+        indent = lines[target["pin_line"]][: len(lines[target["pin_line"]]) - len(lines[target["pin_line"]].lstrip())]
+        lines[target["pin_line"]] = indent + pin_line
+    else:
+        lines.insert(target["path_line"] + 1, pin_line)
+    return "".join(lines)
