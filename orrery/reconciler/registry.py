@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from .checks.base import Check
 from .checks.behavior_lock import BehaviorLockCheck
+from .checks.content_address import ContentAddressCheck
 from .checks.declared_presence import DeclaredPresenceCheck
 from .checks.fleet_reach import FleetReachCheck
 from .checks.floors import FloorsCheck
@@ -29,6 +30,7 @@ _REGISTRY: dict[str, Check] = {
     MemoryHeadroomCheck.id: MemoryHeadroomCheck(),
     VaultCapabilityCheck.id: VaultCapabilityCheck(),
     BehaviorLockCheck.id: BehaviorLockCheck(),
+    ContentAddressCheck.id: ContentAddressCheck(),
 }
 
 

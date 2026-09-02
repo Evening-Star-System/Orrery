@@ -7,6 +7,7 @@ they only ever touch this interface.
 
 from __future__ import annotations
 
+import hashlib
 import os
 import shlex
 import stat as _stat
@@ -16,6 +17,7 @@ from typing import Protocol, runtime_checkable
 
 
 _MAX_LIST_FILE_BYTES = 1_000_000
+_HASH_CHUNK = 65536
 
 
 @runtime_checkable
@@ -32,6 +34,11 @@ class Box(Protocol):
 
     def file_meta(self, path: str) -> "tuple[int, int] | None":
         """Return (owner uid, permission bits) for path, or None if absent/unreadable."""
+        ...
+
+    def content_hash(self, path: str) -> str | None:
+        """Return the sha256 hex digest of path's bytes, or None if absent or unreadable.
+        Value-blind: it identifies the bytes, it never interprets them."""
         ...
 
 
@@ -77,6 +84,20 @@ class LocalBox:
         except OSError:
             return None
         return (st.st_uid, _stat.S_IMODE(st.st_mode))
+
+    def content_hash(self, path: str) -> str | None:
+        # Streamed so a large file is hashed without being loaded whole. isfile() first,
+        # so a FIFO/device never blocks the read.
+        try:
+            if not os.path.isfile(path):
+                return None
+            h = hashlib.sha256()
+            with open(path, "rb") as f:
+                for chunk in iter(lambda: f.read(_HASH_CHUNK), b""):
+                    h.update(chunk)
+            return h.hexdigest()
+        except OSError:
+            return None
 
 
 class SshBox:
@@ -155,3 +176,19 @@ class SshBox:
             return (int(parts[0]), int(parts[1], 8))
         except (ValueError, IndexError):
             return None
+
+    def content_hash(self, path: str) -> str | None:
+        # sha256sum on the remote, the same read-only, bounded, quoted discipline as the
+        # other probes. The digest is the first field; validate its shape before trusting it.
+        if not self._ok_path(path):
+            return None
+        rc, out = self._runner("sha256sum -- " + shlex.quote(path))
+        if rc != 0:
+            return None
+        try:
+            digest = out.decode("utf-8").split()[0].lower()
+        except (IndexError, UnicodeDecodeError):
+            return None
+        if len(digest) == 64 and all(c in "0123456789abcdef" for c in digest):
+            return digest
+        return None
