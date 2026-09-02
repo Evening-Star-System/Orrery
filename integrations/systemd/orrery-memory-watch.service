@@ -1,0 +1,24 @@
+[Unit]
+Description=Evaluate memory headroom and push the verdict to Uptime Kuma
+Documentation=https://github.com/Evening-Star-System/Orrery
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/orrery-memory-watch
+
+# Exit 1 means "evaluated fine, and the verdict is DRIFT/FAIL" -- the alert travels in
+# the push, not in the unit's state. Without this systemd marks the unit failed on
+# every drift, which parks it permanently in `systemctl --failed`, buries real unit
+# failures in noise, and is how a monitor ends up disabled by whoever is tidying up.
+# Exit 2 (the push itself failed) is left as a genuine failure, because then nobody
+# has been told anything.
+SuccessExitStatus=1
+# The watcher must never become the thing that starves the box it is watching.
+MemoryMax=256M
+CPUWeight=10
+Nice=10
+# Read-only work; give it no more reach than that.
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+NoNewPrivileges=yes

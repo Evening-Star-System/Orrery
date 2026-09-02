@@ -1,0 +1,5 @@
+bucket	org_name	host	account	visibility	license	license_spdx	donate
+acme	Acme Collective	codeberg.org	acme	public	AGPL-3.0	AGPL-3.0-or-later	-
+globex	Globex	github.com	Globex-Inc	private	Commercial	LicenseRef-Proprietary	-
+initech	Initech	github.com	Globex-Inc	private	Commercial	LicenseRef-Proprietary	-
+umbrella	Umbrella	github.com	umbrella	private	Commercial	LicenseRef-Proprietary	-

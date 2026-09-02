@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# fixture: an org_of case-function encoding of the org map. github-only, and
+# deliberately a SUBSET of buckets (no acme). acme should read as uncovered
+# (INFO), not drift.
+org_of(){ case "$1" in globex|initech) echo globex-inc;; umbrella) echo umbrella;; *) echo "";; esac; }

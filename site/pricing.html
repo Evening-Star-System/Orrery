@@ -1,0 +1,870 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pricing: Free Core Plus Hosted Operator Plans | ESS Orrery</title>
+<meta name="description" content="ESS Orrery core is free forever, self-hosted, AGPL, unlimited boxes. Hosted plans add governed autonomy, priced per operator and box band, never per machine.">
+<meta property="og:title" content="ESS Orrery">
+<meta property="og:type" content="website">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<meta property="og:site_name" content="ESS Orrery">
+<meta property="og:url" content="https://orrery.eveningstar.app/pricing">
+<meta property="og:image" content="https://orrery.eveningstar.app/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://orrery.eveningstar.app/og.png">
+<meta name="twitter:title" content="Pricing: Free Core Plus Hosted Operator Plans | ESS Orrery">
+<meta name="twitter:description" content="ESS Orrery core is free forever, self-hosted, AGPL, unlimited boxes. Hosted plans add governed autonomy, priced per operator and box band, never per machine.">
+<link rel="canonical" href="https://orrery.eveningstar.app/pricing">
+<meta property="og:title" content="Pricing: Free Core Plus Hosted Operator Plans | ESS Orrery">
+<meta property="og:description" content="ESS Orrery core is free forever, self-hosted, AGPL, unlimited boxes. Hosted plans add governed autonomy, priced per operator and box band, never per machine.">
+<style>
+  :root{
+    /* dark, verified WCAG AA (see DESIGN.md) */
+    --ground:#06080f; --ground-2:#0a0e1a; --panel:#0d1322; --card:#0f1728; --panel-2:#131d33;
+    --ink:#eef2fb; --muted:#a7b2ca; --faint:#7d89a4;
+    --gold:#f4c66b; --gold-deep:#e3b055; --silver:#cbd5ea;
+    --good:#6fe0a6; --drift:#f2b45a;
+    --line:rgba(150,170,210,.12); --line-2:rgba(150,170,210,.06); --line-lit:rgba(230,238,255,.10);
+    --orbit:rgba(155,175,215,.20);
+    --glow:rgba(244,198,107,.50);
+    --btn-bg:var(--gold); --btn-ink:#1a1206;
+    --shadow:0 40px 120px -30px rgba(0,0,0,.75);
+    --mono:ui-monospace,"SF Mono","JetBrains Mono","Cascadia Code",Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    --maxw:1200px;
+    color-scheme:dark;
+  }
+  @media (prefers-color-scheme:light){
+    :root{
+      --ground:#f3efe6; --ground-2:#efe9dd; --panel:#f7f2e8; --card:#faf6ee; --panel-2:#ece5d6;
+      --ink:#1f1c15; --muted:#5f5849; --faint:#6b6350;
+      --gold:#a9721f; --gold-deep:#8a5c17; --silver:#5c5443;
+      --good:#2f7d54; --drift:#8a5f12;
+      --line:rgba(40,34,22,.14); --line-2:rgba(40,34,22,.07); --line-lit:rgba(255,255,255,.65);
+      --orbit:rgba(60,50,30,.24);
+      --glow:rgba(169,114,31,.26);
+      --btn-bg:#6e4712; --btn-ink:#ffffff;
+      --shadow:0 30px 80px -30px rgba(60,45,20,.35);
+      color-scheme:light;
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#06080f; --ground-2:#0a0e1a; --panel:#0d1322; --card:#0f1728; --panel-2:#131d33;
+    --ink:#eef2fb; --muted:#a7b2ca; --faint:#7d89a4;
+    --gold:#f4c66b; --gold-deep:#e3b055; --silver:#cbd5ea;
+    --good:#6fe0a6; --drift:#f2b45a;
+    --line:rgba(150,170,210,.12); --line-2:rgba(150,170,210,.06); --line-lit:rgba(230,238,255,.10);
+    --orbit:rgba(155,175,215,.20); --glow:rgba(244,198,107,.50);
+    --btn-bg:var(--gold); --btn-ink:#1a1206; --shadow:0 40px 120px -30px rgba(0,0,0,.75);
+    color-scheme:dark;
+  }
+  :root[data-theme="light"]{
+    --ground:#f3efe6; --ground-2:#efe9dd; --panel:#f7f2e8; --card:#faf6ee; --panel-2:#ece5d6;
+    --ink:#1f1c15; --muted:#5f5849; --faint:#6b6350;
+    --gold:#a9721f; --gold-deep:#8a5c17; --silver:#5c5443;
+    --good:#2f7d54; --drift:#8a5f12;
+    --line:rgba(40,34,22,.14); --line-2:rgba(40,34,22,.07); --line-lit:rgba(255,255,255,.65);
+    --orbit:rgba(60,50,30,.24); --glow:rgba(169,114,31,.26);
+    --btn-bg:#6e4712; --btn-ink:#ffffff; --shadow:0 30px 80px -30px rgba(60,45,20,.35);
+    color-scheme:light;
+  }
+
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){ html{scroll-behavior:auto} }
+  body{
+    margin:0; background:var(--ground); color:var(--ink);
+    font-family:var(--sans); line-height:1.6; font-size:17px;
+    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+    overflow-x:hidden;
+  }
+  ::selection{background:var(--gold); color:#1a1206}
+  a{color:inherit}
+  img,canvas{max-width:100%}
+  .wrap{max-width:var(--maxw); margin:0 auto; padding:0 28px}
+  .mono{font-family:var(--mono)}
+  .tnum{font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1}
+
+  .eyebrow{
+    font-family:var(--mono); font-size:12px; letter-spacing:.24em;
+    text-transform:uppercase; color:var(--gold-deep); margin:0;
+  }
+  h1,h2,h3,h4{margin:0; text-wrap:balance; font-family:var(--sans); font-weight:640}
+  h1{font-weight:680}
+
+  /* skip link */
+  .skip{
+    position:absolute; left:16px; top:-60px; z-index:200;
+    background:var(--gold); color:#1a1206; font-family:var(--mono); font-size:13px;
+    font-weight:600; text-decoration:none; padding:10px 16px; border-radius:3px; transition:top .15s;
+  }
+  .skip:focus{top:16px}
+
+  /* backdrop */
+  .stars{position:fixed; inset:0; z-index:0; pointer-events:none; opacity:.9}
+  .aura{
+    position:fixed; z-index:0; pointer-events:none; left:50%; top:-8%;
+    width:min(1200px,120vw); aspect-ratio:1/1; transform:translateX(-50%);
+    background:radial-gradient(closest-side, var(--glow), transparent 70%);
+    opacity:.55; filter:blur(10px);
+  }
+
+  /* top bar */
+  header{
+    position:sticky; top:0; z-index:40;
+    backdrop-filter:saturate(140%) blur(12px);
+    background:color-mix(in srgb, var(--ground) 74%, transparent);
+    border-bottom:1px solid var(--line);
+  }
+  .bar{display:flex; align-items:center; justify-content:space-between; height:64px}
+  .brand{display:flex; align-items:center; gap:11px; font-size:18px; letter-spacing:.01em; text-decoration:none}
+  .brand b{font-weight:670} .brand span{font-weight:420; color:var(--muted)}
+  .sigil{width:24px; height:24px; display:block; filter:drop-shadow(0 0 6px var(--glow))}
+  nav.primary{display:flex; align-items:center; gap:8px}
+  nav.primary .navlink{font-family:var(--mono); font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); text-decoration:none; padding:9px 12px; border-radius:4px; transition:color .18s, background .18s}
+  nav.primary .navlink:hover{color:var(--ink); background:color-mix(in srgb, var(--ink) 7%, transparent)}
+  nav.primary a[aria-current="page"]{color:var(--gold-deep)}
+  .navcta{font-family:var(--mono); font-size:12px; letter-spacing:.06em; text-transform:uppercase; text-decoration:none;
+    background:var(--btn-bg); color:var(--btn-ink); font-weight:640; padding:9px 15px; border-radius:5px; margin-left:6px;
+    box-shadow:0 0 0 1px color-mix(in srgb, var(--gold) 40%, transparent), 0 8px 22px -10px var(--glow); transition:transform .15s, box-shadow .2s}
+  .navcta:hover{transform:translateY(-1px); box-shadow:0 0 0 1px var(--gold), 0 12px 28px -10px var(--glow)}
+  .toggle{
+    font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--muted); background:transparent; border:1px solid var(--line);
+    border-radius:5px; padding:8px 11px; cursor:pointer; transition:.18s;
+  }
+  .toggle:hover{border-color:var(--gold-deep); color:var(--ink)}
+  .navtoggle{
+    display:none; align-items:center; justify-content:center;
+    width:40px; height:40px; padding:0; margin-left:8px; flex:0 0 auto;
+    background:transparent; border:1px solid var(--line); border-radius:6px;
+    cursor:pointer; transition:border-color .18s;
+  }
+  .navtoggle:hover{ border-color:var(--gold-deep) }
+  .navtoggle-bars{ position:relative; display:block; width:18px; height:2px; border-radius:2px; background:var(--ink) }
+  .navtoggle-bars::before, .navtoggle-bars::after{ content:""; position:absolute; left:0; width:18px; height:2px; border-radius:2px; background:var(--ink); transition:transform .2s ease, top .2s ease, opacity .2s ease }
+  .navtoggle-bars::before{ top:-6px }
+  .navtoggle-bars::after{ top:6px }
+  .navtoggle[aria-expanded="true"] .navtoggle-bars{ background:transparent }
+  .navtoggle[aria-expanded="true"] .navtoggle-bars::before{ top:0; transform:rotate(45deg) }
+  .navtoggle[aria-expanded="true"] .navtoggle-bars::after{ top:0; transform:rotate(-45deg) }
+  @media (max-width:900px){
+    .navtoggle{ display:inline-flex }
+    nav.primary{
+      display:flex; flex-direction:column; align-items:stretch; gap:0;
+      position:absolute; left:0; right:0; top:100%; z-index:39;
+      background:var(--ground); border-bottom:1px solid var(--line);
+      box-shadow:var(--shadow); padding:8px 0;
+      opacity:0; visibility:hidden; transform:translateY(-6px); pointer-events:none;
+      transition:opacity .18s ease, transform .18s ease, visibility 0s linear .18s;
+    }
+    nav.primary.open{
+      opacity:1; visibility:visible; transform:translateY(0); pointer-events:auto;
+      transition:opacity .18s ease, transform .18s ease;
+    }
+    nav.primary .navlink{
+      display:flex; align-items:center; width:100%; box-sizing:border-box;
+      min-height:44px; padding:12px 28px; font-size:13px; border-radius:0;
+    }
+    nav.primary .toggle{ margin:10px 28px; align-self:flex-start; min-height:44px }
+    nav.primary .navcta{ margin:10px 28px; justify-content:center; text-align:center; min-height:44px; box-sizing:border-box }
+  }
+  @media (prefers-reduced-motion:reduce){
+    nav.primary{ transition:none }
+    nav.primary.open{ transition:none }
+    .navtoggle-bars::before, .navtoggle-bars::after{ transition:none }
+  }
+
+  /* shared panel look: hairline + light-catching top edge */
+  .panel{position:relative; background:var(--card); border:1px solid var(--line); border-radius:12px;
+    box-shadow:inset 0 1px 0 var(--line-lit), var(--shadow)}
+
+  /* ---- hero-style bits reused on this page ---- */
+  .kicker{display:inline-flex; align-items:center; gap:10px; font-family:var(--mono); font-size:12px;
+    letter-spacing:.16em; text-transform:uppercase; color:var(--muted);
+    border:1px solid var(--line); border-radius:100px; padding:6px 13px; box-shadow:inset 0 1px 0 var(--line-lit)}
+  .lede{margin:18px 0 0; font-size:clamp(17px,1.5vw,20px); line-height:1.55; color:var(--muted); max-width:48ch}
+  .metarow{display:flex; flex-wrap:wrap; gap:8px; margin-top:26px}
+  .tag{font-family:var(--mono); font-size:11.5px; letter-spacing:.04em; color:var(--muted);
+    border:1px solid var(--line); border-radius:6px; padding:6px 10px; box-shadow:inset 0 1px 0 var(--line-lit)}
+  .tag b{color:var(--ink); font-weight:640}
+  .cmd{margin-top:22px; display:flex; align-items:center; gap:10px; font-family:var(--mono); font-size:13.5px;
+    background:var(--ground-2); border:1px solid var(--line); border-radius:8px; padding:11px 12px; max-width:min(100%,420px);
+    box-shadow:inset 0 1px 0 var(--line-lit)}
+  .cmd .p{color:var(--gold-deep)} .cmd code{color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .cmd .cp{margin-left:auto; flex:0 0 auto; font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase;
+    background:transparent; color:var(--muted); border:1px solid var(--line); border-radius:5px; padding:6px 9px; cursor:pointer; transition:.15s}
+  .cmd .cp:hover{border-color:var(--gold-deep); color:var(--ink)}
+  .cta-row{display:flex; gap:12px; margin-top:26px; flex-wrap:wrap; align-items:center}
+  .btn{font-family:var(--mono); font-size:13px; letter-spacing:.05em; text-transform:uppercase;
+    text-decoration:none; padding:13px 20px; border-radius:7px; transition:transform .15s, box-shadow .2s, border-color .2s; display:inline-flex; align-items:center; gap:8px; cursor:pointer; border:0}
+  .btn-p{background:var(--btn-bg); color:var(--btn-ink); font-weight:640;
+    box-shadow:0 0 0 1px color-mix(in srgb, var(--gold) 45%, transparent), 0 14px 34px -14px var(--glow)}
+  .btn-p:hover{transform:translateY(-1px); box-shadow:0 0 0 1px var(--gold), 0 18px 40px -14px var(--glow)}
+  .btn-s{color:var(--ink); border:1px solid var(--line); box-shadow:inset 0 1px 0 var(--line-lit); background:transparent}
+  .btn-s:hover{border-color:var(--gold-deep); transform:translateY(-1px)}
+
+  /* ---- sections ---- */
+  section{position:relative; z-index:1}
+  .band{border-top:1px solid var(--line); padding:clamp(72px,9vw,128px) 0}
+  .band.plain{border-top:0}
+  .sec-head{max-width:64ch}
+  .sec-head .idx{font-family:var(--mono); font-size:12px; color:var(--gold-deep); letter-spacing:.2em}
+  .sec-head h2{font-size:clamp(30px,3.9vw,48px); letter-spacing:-.024em; line-height:1.05; margin:14px 0 0}
+  .sec-sub{color:var(--muted); max-width:60ch; margin:18px 0 0; font-size:clamp(16px,1.3vw,18px)}
+  .sec-top{margin-bottom:46px}
+
+  /* ---- footer ---- */
+  footer{border-top:1px solid var(--line); padding:56px 0 30px; position:relative; z-index:1}
+  .foot-grid{display:flex; justify-content:space-between; gap:32px; flex-wrap:wrap; align-items:flex-start}
+  .foot-brand{display:flex; align-items:center; gap:10px; font-size:16px}
+  .foot-brand b{font-weight:660}
+  .foot-nav{display:flex; flex-wrap:wrap; gap:8px 22px; font-family:var(--mono); font-size:12px; letter-spacing:.04em}
+  .foot-nav a{color:var(--muted); text-decoration:none} .foot-nav a:hover{color:var(--gold-deep)}
+  .foot-meta{margin-top:26px; font-family:var(--mono); font-size:11.5px; color:var(--faint); letter-spacing:.03em}
+  /* closing seal: understated, present, never competes for attention (see DESIGN.md) */
+  .istl{position:relative; z-index:1; text-align:center; font-family:var(--serif); font-style:italic;
+    font-size:12.5px; letter-spacing:.05em; color:var(--gold-deep); padding:8px 0 42px}
+
+  /* reveal + focus */
+  .rise{opacity:0; transform:translateY(18px); transition:opacity .7s cubic-bezier(.2,.7,.2,1), transform .7s cubic-bezier(.2,.7,.2,1)}
+  .rise.in{opacity:1; transform:none}
+  :focus-visible{outline:2px solid var(--gold); outline-offset:3px; border-radius:4px}
+  @media (prefers-reduced-motion:reduce){ .rise{opacity:1; transform:none; transition:none} }
+
+  /* =====================================================================
+     Page-specific: pricing
+     ===================================================================== */
+  .sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden;
+    clip:rect(0,0,0,0); white-space:nowrap; border:0}
+
+  /* intro */
+  .intro{position:relative; z-index:1; padding:clamp(40px,7vw,80px) 0 12px}
+  .intro h1{font-size:clamp(36px,5.6vw,60px); line-height:1.06; letter-spacing:-.03em; margin:18px 0 0; font-weight:700}
+  .intro .lede{max-width:66ch}
+  .notes{display:flex; flex-wrap:wrap; gap:28px; margin-top:30px}
+  .note{font-family:var(--mono); font-size:12.5px; color:var(--muted); display:flex; gap:9px; align-items:baseline; max-width:34ch; line-height:1.55}
+  .note b{color:var(--gold-deep); font-weight:640}
+
+  /* billing toggle (reuses the deck's segmented control look) */
+  .seg{display:inline-flex; border:1px solid var(--line); border-radius:7px; overflow:hidden; box-shadow:inset 0 1px 0 var(--line-lit); margin-bottom:8px}
+  .seg button{font-family:var(--mono); font-size:11.5px; letter-spacing:.06em; text-transform:uppercase;
+    background:transparent; color:var(--muted); border:0; padding:11px 18px; cursor:pointer; transition:.15s}
+  .seg button:not(:first-child){border-left:1px solid var(--line)}
+  .seg button:hover{color:var(--ink)}
+  .seg button[aria-pressed="true"]{background:var(--btn-bg); color:var(--btn-ink); font-weight:640}
+  .seg button[aria-pressed="true"]:not(:first-child){border-left-color:transparent}
+
+  /* plan cards */
+  .plans{display:grid; grid-template-columns:repeat(4,1fr); gap:16px; align-items:stretch; margin-top:36px}
+  @media (max-width:980px){ .plans{grid-template-columns:repeat(2,1fr)} }
+  @media (max-width:560px){ .plans{grid-template-columns:1fr} }
+  .plan{position:relative; background:var(--card); border:1px solid var(--line); border-radius:12px;
+    padding:28px 24px; display:flex; flex-direction:column; box-shadow:inset 0 1px 0 var(--line-lit);
+    transition:transform .16s, border-color .16s}
+  .plan:hover{transform:translateY(-3px); border-color:var(--gold-deep)}
+  .plan.popular{border-color:var(--gold-deep); box-shadow:inset 0 1px 0 var(--line-lit), 0 22px 60px -26px var(--glow)}
+  .plan-badge{font-family:var(--mono); font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--gold-deep); margin:0 0 14px; display:block}
+  .plan h3{font-size:22px; margin:0 0 6px; font-weight:640; letter-spacing:-.012em}
+  .plan .tag-line{color:var(--muted); font-size:13.5px; margin:0 0 20px; min-height:2.6em; line-height:1.5}
+  .price{display:flex; align-items:baseline; gap:6px; margin:0 0 4px}
+  .price .amt{font-family:var(--mono); font-size:32px; color:var(--ink); font-weight:680; letter-spacing:-.02em}
+  .price .per{font-family:var(--mono); font-size:12.5px; color:var(--muted)}
+  .price-note{font-family:var(--mono); font-size:11.5px; color:var(--muted); margin:0 0 18px; min-height:1.6em}
+  .badge{display:inline-flex; align-items:center; gap:7px; font-family:var(--mono);
+    font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink); margin:0 0 18px}
+  .badge .dot{width:7px; height:7px; border-radius:50%; background:var(--good); box-shadow:0 0 8px var(--good); flex:0 0 auto}
+  .badge.wait .dot{background:var(--drift); box-shadow:0 0 8px var(--drift)}
+  .badge.live .dot{background:var(--gold); box-shadow:0 0 8px var(--gold)}
+  .plan ul{margin:0 0 22px; padding:0; list-style:none; flex:1}
+  .plan li{color:var(--muted); font-size:13.5px; padding:8px 0 8px 20px; position:relative; border-top:1px solid var(--line-2)}
+  .plan li:first-child{border-top:none}
+  .plan li::before{content:"+"; position:absolute; left:0; color:var(--gold-deep); font-family:var(--mono)}
+  .plan .btn{width:100%; justify-content:center}
+  .plan-install{margin-top:14px; font-family:var(--mono); font-size:12px; color:var(--muted);
+    border-left:2px solid var(--gold-deep); padding:2px 0 2px 12px}
+  .plan-install .p{color:var(--gold-deep)}
+
+  /* nonprofit callout */
+  .callout{margin-top:32px; background:var(--card); border:1px solid var(--line); border-left:2px solid var(--gold-deep);
+    border-radius:10px; padding:22px 26px; box-shadow:inset 0 1px 0 var(--line-lit)}
+  .callout .eyebrow{margin-bottom:10px; display:block}
+  .callout p{margin:0; color:var(--muted); font-size:14.5px; max-width:70ch; line-height:1.6}
+  .callout p + p{margin-top:10px}
+
+  /* comparison table */
+  .table-wrap{overflow-x:auto; border:1px solid var(--line); border-radius:10px}
+  .table-wrap:focus-visible{outline:2px solid var(--gold); outline-offset:-2px}
+  table{border-collapse:collapse; width:100%; min-width:760px; font-size:14px}
+  caption{text-align:left; padding:16px 18px; font-family:var(--sans); font-weight:640; font-size:17px; letter-spacing:-.008em; color:var(--ink); background:var(--ground-2); border-bottom:1px solid var(--line)}
+  thead th{
+    text-align:left; font-family:var(--mono); font-size:11.5px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--muted); background:var(--ground-2); padding:14px 18px; border-bottom:1px solid var(--line);
+    vertical-align:top;
+  }
+  thead th .th-name{display:block; font-family:var(--sans); font-weight:640; font-size:15.5px; text-transform:none; letter-spacing:-.006em; color:var(--ink); margin-bottom:4px}
+  thead th.is-popular{background:color-mix(in srgb, var(--gold-deep) 12%, var(--ground-2)); color:var(--ink)}
+  thead th .th-flag{display:block; font-size:10px; font-weight:700; color:var(--ink); margin-top:4px; letter-spacing:.06em}
+  tbody th{
+    text-align:left; font-family:var(--sans); font-weight:600; font-size:13.5px; color:var(--ink);
+    padding:12px 18px; border-bottom:1px solid var(--line-2); background:var(--panel); white-space:nowrap;
+  }
+  tbody td{padding:12px 18px; border-bottom:1px solid var(--line-2); color:var(--muted); font-size:13.5px; font-variant-numeric:tabular-nums}
+  tbody td.is-popular{background:color-mix(in srgb, var(--gold-deep) 6%, transparent); color:var(--ink)}
+  tbody td.yes{color:var(--ink)}
+  tbody tr:last-child th, tbody tr:last-child td{border-bottom:none}
+
+  /* faq */
+  .faq{max-width:78ch}
+  .faq details{border-top:1px solid var(--line-2); padding:18px 0}
+  .faq details:first-child{border-top:1px solid var(--line)}
+  .faq summary{
+    font-family:var(--sans); font-weight:640; font-size:17px; letter-spacing:-.006em; color:var(--ink); cursor:pointer;
+    list-style:none; display:flex; align-items:center; justify-content:space-between; gap:12px;
+  }
+  .faq summary::-webkit-details-marker{display:none}
+  .faq summary::after{content:"+"; font-family:var(--mono); color:var(--gold-deep); font-size:18px; flex:0 0 auto}
+  .faq details[open] summary::after{content:"\2212"}
+  .faq p{color:var(--muted); font-size:14.5px; margin:14px 0 0; max-width:70ch; line-height:1.6}
+</style>
+<noscript><style>.rise{opacity:1 !important; transform:none !important}</style></noscript>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "SoftwareApplication",
+      "@id": "https://orrery.eveningstar.app/pricing#software",
+      "name": "ESS Orrery",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Linux",
+      "description": "ESS Orrery core is free forever, self-hosted, AGPL, unlimited boxes. Hosted plans add governed autonomy, priced per operator and box band, never per machine.",
+      "license": "https://www.gnu.org/licenses/agpl-3.0.html",
+      "url": "https://orrery.eveningstar.app/",
+      "offers": [
+        {
+          "@type": "Offer",
+          "name": "Core",
+          "price": "0",
+          "priceCurrency": "USD",
+          "availability": "https://schema.org/InStock",
+          "description": "Self-hosted, AGPL-3.0-or-later, unlimited boxes, one operator. Free forever, not a trial."
+        },
+        {
+          "@type": "Offer",
+          "name": "Operator",
+          "price": "49",
+          "priceCurrency": "USD",
+          "availability": "https://schema.org/PreOrder",
+          "description": "Hosted control plane and governed autonomy, 1 operator seat, up to 10 boxes. Early access, billed monthly."
+        },
+        {
+          "@type": "Offer",
+          "name": "Team",
+          "price": "199",
+          "priceCurrency": "USD",
+          "availability": "https://schema.org/PreOrder",
+          "description": "5 operator seats, up to 50 boxes, approvals workflow, full audit log, SSO. Early access, billed monthly."
+        },
+        {
+          "@type": "Offer",
+          "name": "Enterprise",
+          "price": "999",
+          "priceCurrency": "USD",
+          "availability": "https://schema.org/PreOrder",
+          "description": "Unlimited operator seats and boxes, linked secret rotation, audited managed plane. From $999/mo, early access."
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "ESS Orrery",
+          "item": "https://orrery.eveningstar.app/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Pricing",
+          "item": "https://orrery.eveningstar.app/pricing"
+        }
+      ]
+    }
+  ]
+}
+</script>
+  <script defer src="https://analytics.ninthstar.org/getinfo" data-website-id="0bd58f0a-2425-4d69-ad47-bf66c762359e"></script>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<div class="aura" aria-hidden="true"></div>
+<canvas class="stars" id="stars" aria-hidden="true"></canvas>
+
+<header>
+  <div class="wrap bar">
+    <a class="brand" href="/" aria-label="ESS Orrery, home">
+      <svg class="sigil" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="12" cy="12" r="10" stroke="var(--gold-deep)" stroke-width="1" opacity=".5"/>
+        <ellipse cx="12" cy="12" rx="10" ry="4" stroke="var(--gold-deep)" stroke-width="1" opacity=".5"/>
+        <circle cx="12" cy="12" r="2.3" fill="var(--gold)"/>
+        <circle cx="22" cy="12" r="1.4" fill="var(--silver)"/>
+      </svg>
+      <b>ESS Orrery</b>
+    </a>
+    <button class="navtoggle" id="navToggle" type="button" aria-expanded="false" aria-controls="primaryNav" aria-label="Open menu">
+      <span class="navtoggle-bars" aria-hidden="true"></span>
+    </button>
+    <nav class="primary" id="primaryNav" aria-label="Primary">
+      <a class="navlink" href="/features">Reconciler</a>
+      <a class="navlink" href="/compare">Compare</a>
+      <a class="navlink" href="/pricing" aria-current="page">Pricing</a>
+      <a class="navlink" href="/docs">Docs</a>
+      <button class="toggle" id="themeBtn" aria-label="Toggle light and dark theme">Light</button>
+      <a class="navcta" href="/get-started">Get started</a>
+    </nav>
+  </div>
+</header>
+<script>
+(function(){
+  "use strict";
+  var toggle = document.getElementById("navToggle"), nav = document.getElementById("primaryNav");
+  if(!toggle || !nav) return;
+  function closeNav(){
+    nav.classList.remove("open");
+    toggle.setAttribute("aria-expanded","false");
+  }
+  function openNav(){
+    nav.classList.add("open");
+    toggle.setAttribute("aria-expanded","true");
+  }
+  toggle.addEventListener("click", function(){
+    if(nav.classList.contains("open")){ closeNav(); } else { openNav(); }
+  });
+  nav.addEventListener("click", function(e){
+    if(e.target.closest("a")){ closeNav(); }
+  });
+  document.addEventListener("keydown", function(e){
+    if(e.key === "Escape" && nav.classList.contains("open")){ closeNav(); toggle.focus(); }
+  });
+  document.addEventListener("click", function(e){
+    if(nav.classList.contains("open") && !nav.contains(e.target) && !toggle.contains(e.target)){ closeNav(); }
+  });
+  window.matchMedia("(min-width:901px)").addEventListener("change", function(mq){
+    if(mq.matches){ closeNav(); }
+  });
+})();
+</script>
+
+<main id="main" tabindex="-1">
+
+  <section class="wrap intro">
+    <span class="eyebrow rise">Pricing</span>
+    <h1 class="rise">Priced like software you run, not a subscription trap.</h1>
+    <p class="lede rise">One free core, self-hosted and AGPL, unlimited boxes, forever. Above it, a hosted
+      plane priced per operator and by box band, the number of machines the reconciler watches. Never per
+      machine, never per identity. There is no head-to-head price war here: nothing else ships a plain VPS
+      conformance engine, a secret graph that never reads a secret's value, and a self-verifying install, together.</p>
+    <div class="notes rise">
+      <div class="note"><b>No ads.</b> Never, on any plan.</div>
+      <div class="note"><b>Zero telemetry</b> in the core, by design.</div>
+      <div class="note"><b>Cannot pay?</b> Say so. The core is free regardless, and hosted plans discount for
+        nonprofits and education.</div>
+    </div>
+  </section>
+
+  <section class="band" id="plans">
+    <div class="wrap">
+      <div class="sec-head sec-top rise"><span class="idx">I</span><h2>Four ways to run it.</h2>
+        <p class="sec-sub">Monthly by default. Annual bills for ten months and gives you two free,
+          on every paid plan.</p>
+      </div>
+
+      <div class="seg rise" role="group" aria-label="Billing period" id="billingToggle">
+        <button type="button" data-period="monthly" aria-pressed="true">Monthly</button>
+        <button type="button" data-period="annual" aria-pressed="false">Annual, 2 months free</button>
+      </div>
+
+      <div class="plans rise">
+        <div class="plan">
+          <span class="plan-badge">01 / self-host</span>
+          <h3>Core</h3>
+          <p class="tag-line">The reconciler, guards, CLI, and deck. Run it on anything, unlimited boxes.</p>
+          <div class="price">
+            <span class="amt tnum">$0</span><span class="per">/mo</span>
+          </div>
+          <p class="price-note">Free forever, not a trial.</p>
+          <span class="badge live"><span class="dot" aria-hidden="true"></span>Live now</span>
+          <ul>
+            <li>The reconciler and its six checks</li>
+            <li>Per-directory context isolation</li>
+            <li>Self-verifying install and the CLI</li>
+            <li>The themed terminal deck</li>
+            <li>Unlimited boxes, one operator, self-hosted</li>
+            <li>AGPL-3.0-or-later, fully auditable</li>
+          </ul>
+          <a class="btn btn-s" href="/#model">See the open core</a>
+          <div class="plan-install"><span class="p mono">$</span> pip install ess-orrery &amp;&amp; ess-orrery doctor</div>
+        </div>
+
+        <div class="plan">
+          <span class="plan-badge">02 / hosted, solo</span>
+          <h3>Operator</h3>
+          <p class="tag-line">The hosted plane and governed autonomy for one operator.</p>
+          <div class="price">
+            <span class="amt tnum" data-monthly>$49</span><span class="amt tnum" data-annual hidden>$490</span>
+            <span class="per" data-monthly>/mo</span><span class="per" data-annual hidden>/yr</span>
+          </div>
+          <p class="price-note" data-monthly>Billed monthly.</p>
+          <p class="price-note" data-annual hidden>Billed yearly. Two months free.</p>
+          <span class="badge wait"><span class="dot" aria-hidden="true"></span>Early access</span>
+          <ul>
+            <li>Everything in Core</li>
+            <li>Governed-autonomy trust layer</li>
+            <li>Hosted control plane, 1 operator seat</li>
+            <li>Box band: up to 10 boxes</li>
+            <li>Email support</li>
+          </ul>
+          <a class="btn btn-s" href="mailto:orrery@eveningstar.app?subject=Orrery%20Operator%20plan%2C%20early%20access">Request early access</a>
+        </div>
+
+        <div class="plan popular">
+          <span class="plan-badge">03 / hosted, team, most popular</span>
+          <h3>Team</h3>
+          <p class="tag-line">Approvals, audit, and SSO for a team running a real fleet.</p>
+          <div class="price">
+            <span class="amt tnum" data-monthly>$199</span><span class="amt tnum" data-annual hidden>$1,990</span>
+            <span class="per" data-monthly>/mo</span><span class="per" data-annual hidden>/yr</span>
+          </div>
+          <p class="price-note" data-monthly>Billed monthly.</p>
+          <p class="price-note" data-annual hidden>Billed yearly. Two months free.</p>
+          <span class="badge wait"><span class="dot" aria-hidden="true"></span>Early access</span>
+          <ul>
+            <li>Everything in Operator</li>
+            <li>5 operator seats included</li>
+            <li>Box band: up to 50 boxes</li>
+            <li>Approvals workflow</li>
+            <li>Full audit log</li>
+            <li>SSO</li>
+            <li>Priority support</li>
+          </ul>
+          <a class="btn btn-p" href="mailto:orrery@eveningstar.app?subject=Orrery%20Team%20plan%2C%20early%20access">Request early access</a>
+        </div>
+
+        <div class="plan">
+          <span class="plan-badge">04 / hosted, enterprise</span>
+          <h3>Enterprise</h3>
+          <p class="tag-line">The full fleet, linked rotation, and an audited managed plane.</p>
+          <div class="price">
+            <span class="amt tnum" data-monthly>From $999</span><span class="amt tnum" data-annual hidden>From $9,990</span>
+            <span class="per" data-monthly>/mo</span><span class="per" data-annual hidden>/yr</span>
+          </div>
+          <p class="price-note" data-monthly>Billed monthly. Scoped to your fleet.</p>
+          <p class="price-note" data-annual hidden>Billed yearly. Two months free.</p>
+          <span class="badge wait"><span class="dot" aria-hidden="true"></span>Early access</span>
+          <ul>
+            <li>Everything in Team</li>
+            <li>Unlimited operator seats</li>
+            <li>Full fleet, unlimited boxes</li>
+            <li>Linked secret rotation</li>
+            <li>Audited managed plane</li>
+            <li>Dedicated support and a custom SLA</li>
+          </ul>
+          <a class="btn btn-s" href="mailto:orrery@eveningstar.app?subject=Orrery%20Enterprise%2C%20early%20access">Talk to us</a>
+        </div>
+      </div>
+
+      <div class="callout rise">
+        <span class="eyebrow">Nonprofit, education, and cannot-pay</span>
+        <p>The self-host core is free regardless of who you are, with no crippled tier and no expiring
+          trial. If you are running this for a nonprofit or a school, or you simply cannot pay right now,
+          say so when you write in. Hosted plans are discounted for people doing that work.</p>
+        <p>Prefer to avoid the AGPL's network-copyleft terms entirely? A commercial license for the core is
+          sold separately by Evening Star Productions. Ask, and we will send terms.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="compare">
+    <div class="wrap">
+      <div class="sec-head sec-top rise"><span class="idx">II</span><h2>Compare in detail.</h2>
+        <p class="sec-sub">The same four plans, every line. Scroll sideways on a small screen; the
+          table stays a real table.</p>
+      </div>
+      <div class="table-wrap rise" role="region" aria-label="Plan comparison, scrollable" tabindex="0">
+        <table>
+          <caption>ESS Orrery plans compared</caption>
+          <thead>
+            <tr>
+              <th scope="col"><span class="sr-only">Feature</span></th>
+              <th scope="col"><span class="th-name">Core</span>Self-host</th>
+              <th scope="col"><span class="th-name">Operator</span>Hosted, solo</th>
+              <th scope="col" class="is-popular"><span class="th-name">Team</span>Hosted, team<span class="th-flag">Most popular</span></th>
+              <th scope="col"><span class="th-name">Enterprise</span>Hosted, fleet</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Price</th>
+              <td class="yes">$0</td>
+              <td>$49/mo</td>
+              <td class="is-popular">$199/mo</td>
+              <td>From $999/mo</td>
+            </tr>
+            <tr>
+              <th scope="row">Best for</th>
+              <td>A solo operator who self-hosts</td>
+              <td>A solo operator on the hosted plane</td>
+              <td class="is-popular">A team running a real fleet</td>
+              <td>A large or regulated fleet</td>
+            </tr>
+            <tr>
+              <th scope="row">Operator seats included</th>
+              <td>1</td>
+              <td>1</td>
+              <td class="is-popular">5</td>
+              <td>Unlimited</td>
+            </tr>
+            <tr>
+              <th scope="row">Box band</th>
+              <td>Unlimited, self-hosted</td>
+              <td>Up to 10 boxes</td>
+              <td class="is-popular">Up to 50 boxes</td>
+              <td>Unlimited, full fleet</td>
+            </tr>
+            <tr>
+              <th scope="row">Reconciler, guards, CLI, deck</th>
+              <td class="yes">Included</td>
+              <td class="yes">Included</td>
+              <td class="is-popular yes">Included</td>
+              <td class="yes">Included</td>
+            </tr>
+            <tr>
+              <th scope="row">Governed-autonomy trust layer</th>
+              <td>Not included</td>
+              <td class="yes">Included</td>
+              <td class="is-popular yes">Included</td>
+              <td class="yes">Included</td>
+            </tr>
+            <tr>
+              <th scope="row">Hosted control plane</th>
+              <td>Not included, self-host only</td>
+              <td class="yes">Included</td>
+              <td class="is-popular yes">Included</td>
+              <td class="yes">Included</td>
+            </tr>
+            <tr>
+              <th scope="row">Approvals workflow</th>
+              <td>Not included</td>
+              <td>Not included</td>
+              <td class="is-popular yes">Included</td>
+              <td class="yes">Included</td>
+            </tr>
+            <tr>
+              <th scope="row">Audit log</th>
+              <td>Not included</td>
+              <td>Basic</td>
+              <td class="is-popular yes">Full</td>
+              <td class="yes">Full, with export</td>
+            </tr>
+            <tr>
+              <th scope="row">SSO</th>
+              <td>Not included</td>
+              <td>Not included</td>
+              <td class="is-popular yes">Included</td>
+              <td class="yes">Included</td>
+            </tr>
+            <tr>
+              <th scope="row">Linked secret rotation</th>
+              <td>Not included</td>
+              <td>Not included</td>
+              <td class="is-popular">Not included</td>
+              <td class="yes">Included</td>
+            </tr>
+            <tr>
+              <th scope="row">Support</th>
+              <td>Self-supported</td>
+              <td>Email</td>
+              <td class="is-popular">Priority</td>
+              <td>Dedicated, with a custom SLA</td>
+            </tr>
+            <tr>
+              <th scope="row">License</th>
+              <td>AGPL-3.0-or-later</td>
+              <td>Commercial</td>
+              <td class="is-popular">Commercial</td>
+              <td>Commercial</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="faq">
+    <div class="wrap">
+      <div class="sec-head sec-top rise"><span class="idx">III</span><h2>Questions.</h2></div>
+      <div class="faq rise">
+        <details>
+          <summary>What counts as an operator?</summary>
+          <p>A person who runs Orrery, holds credentials, and acts on findings, not a machine and not a
+            service identity. Core is unmetered because it is self-hosted software you run yourself. Hosted
+            plans include a set number of operator seats and let you add more.</p>
+        </details>
+        <details>
+          <summary>What is a box band?</summary>
+          <p>The number of boxes the reconciler is watching across your fleet, whatever the provider or
+            operating system. It is never priced per machine identity or agent; the band is a ceiling on
+            how many boxes one plan covers before you move up.</p>
+        </details>
+        <details>
+          <summary>Is the free core really free forever?</summary>
+          <p>Yes. It is not a trial and it does not expire or get crippled later. It is AGPL-3.0-or-later,
+            zero runtime dependencies, read-only, and identity-free, so you can audit exactly what it does
+            before you ever run it against a real fleet.</p>
+        </details>
+        <details>
+          <summary>What about the AGPL?</summary>
+          <p>The AGPL is a network-copyleft license: if you modify the core and offer that modified version
+            to others over a network, you must make your changes available under the same terms. If that
+            does not work for how you plan to use it, a commercial license is available from Evening Star
+            Productions instead.</p>
+        </details>
+        <details>
+          <summary>Is the hosted plane live yet?</summary>
+          <p>Not yet. The core (reconciler, guards, CLI, deck, self-verifying install) ships today. The
+            governed-autonomy trust layer, the hosted control plane, and the graphical fleet view are in
+            development. Paid plans are open for early access now, so you can talk to us before it lands.</p>
+        </details>
+        <details>
+          <summary>Do you offer nonprofit or education pricing?</summary>
+          <p>Yes. The self-host core is free regardless. Hosted plans are discounted for nonprofits and
+            education, and if you cannot pay at all, tell us that directly.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <section class="band plain" id="get-started">
+    <div class="wrap">
+      <div class="sec-head sec-top rise"><span class="idx">IV</span><h2>Start with the core, free.</h2>
+        <p class="sec-sub">No account, no card, no telemetry. Install it, run <code class="mono">ess-orrery
+          doctor</code>, and see what it finds on your own boxes.</p>
+      </div>
+      <div class="cta-row rise">
+        <a class="btn btn-p" href="/#reconciler">See the live deck</a>
+        <a class="btn btn-s" href="mailto:orrery@eveningstar.app?subject=Orrery%2C%20hosted%20plane%20early%20access">Talk to us about hosted plans</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-brand rise">
+        <svg class="sigil" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="12" cy="12" r="10" stroke="var(--gold-deep)" stroke-width="1" opacity=".5"/>
+          <ellipse cx="12" cy="12" rx="10" ry="4" stroke="var(--gold-deep)" stroke-width="1" opacity=".5"/>
+          <circle cx="12" cy="12" r="2.3" fill="var(--gold)"/>
+        </svg>
+        <b>ESS Orrery</b>
+      </div>
+      <nav class="foot-nav rise" aria-label="Footer">
+        <a href="/features">Reconciler</a>
+        <a href="/compare">Compare</a>
+        <a href="/pricing">Pricing</a>
+        <a href="/docs">Docs</a>
+        <a href="/get-started">Get started</a>
+        <a href="/security">Security</a>
+        <a href="/terms">Terms</a>
+        <a href="/privacy">Privacy</a>
+      </nav>
+    </div>
+    <div class="foot-meta rise">Open core, AGPL-3.0-or-later. Evening Star Productions.</div>
+  </div>
+</footer>
+
+<div class="istl">In service to Life</div>
+
+<script>
+(function(){
+  "use strict";
+  var reduce = window.matchMedia("(prefers-reduced-motion:reduce)").matches;
+
+  // ---- theme toggle (same contract as index.html) ----
+  var root = document.documentElement, btn = document.getElementById("themeBtn");
+  function currentDark(){
+    var t = root.getAttribute("data-theme");
+    if(t) return t==="dark";
+    return window.matchMedia("(prefers-color-scheme:dark)").matches;
+  }
+  function syncLabel(){ btn.textContent = currentDark() ? "Light" : "Dark"; }
+  btn.addEventListener("click", function(){
+    root.setAttribute("data-theme", currentDark() ? "light" : "dark");
+    syncLabel();
+  });
+  syncLabel();
+  window.matchMedia("(prefers-color-scheme:dark)").addEventListener("change", syncLabel);
+
+  // ---- starfield (identical behavior to index.html, decorative, aria-hidden) ----
+  (function(){
+    var c = document.getElementById("stars");
+    if(!c || !c.getContext) return;
+    var x = c.getContext("2d"), stars=[], W,H,dpr;
+    function size(){
+      dpr = Math.min(window.devicePixelRatio||1, 2);
+      W = c.width = Math.floor(innerWidth*dpr); H = c.height = Math.floor(innerHeight*dpr);
+      c.style.width=innerWidth+"px"; c.style.height=innerHeight+"px";
+      stars = [];
+      var n = Math.min(160, Math.floor(innerWidth*innerHeight/11000));
+      for(var i=0;i<n;i++) stars.push({x:Math.random()*W,y:Math.random()*H,r:(Math.random()*1.1+.2)*dpr,a:Math.random()*.5+.15,tw:Math.random()*2*Math.PI});
+    }
+    function draw(t){
+      x.clearRect(0,0,W,H);
+      var dark = currentDark();
+      for(var i=0;i<stars.length;i++){
+        var st=stars[i], a = st.a*(dark?1:.5)*(reduce?1:(.6+.4*Math.sin(st.tw + t/1400)));
+        x.beginPath(); x.arc(st.x,st.y,st.r,0,6.283);
+        x.globalAlpha = a; x.fillStyle = "rgba("+(dark?"233,237,246":"140,120,80")+","+a.toFixed(3)+")";
+        x.fill();
+      }
+      x.globalAlpha=1;
+      if(!reduce) requestAnimationFrame(draw);
+    }
+    size(); addEventListener("resize", size);
+    if(reduce){ draw(0); } else { requestAnimationFrame(draw); }
+  })();
+
+  // ---- scroll reveals ----
+  if(!reduce && "IntersectionObserver" in window){
+    var io=new IntersectionObserver(function(es){ es.forEach(function(en){ if(en.isIntersecting){ en.target.classList.add("in"); io.unobserve(en.target); } }); },{threshold:.1});
+    document.querySelectorAll(".rise").forEach(function(el){ io.observe(el); });
+  } else {
+    document.querySelectorAll(".rise").forEach(function(el){ el.classList.add("in"); });
+  }
+
+  // ---- billing toggle ----
+  var group = document.getElementById("billingToggle");
+  if(group){
+    group.addEventListener("click", function(e){
+      var b = e.target.closest("button");
+      if(!b) return;
+      var period = b.dataset.period;
+      group.querySelectorAll("button").forEach(function(x){ x.setAttribute("aria-pressed", String(x===b)); });
+      document.querySelectorAll("[data-monthly]").forEach(function(el){ el.hidden = period === "annual"; });
+      document.querySelectorAll("[data-annual]").forEach(function(el){ el.hidden = period !== "annual"; });
+    });
+  }
+})();
+</script>
+</body>
+</html>

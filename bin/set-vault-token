@@ -1,0 +1,103 @@
+#!/usr/bin/env python3
+"""set-vault-token: install a vault token into an operator env file, SAFELY.
+
+Reads the new token on STDIN (never argv, so it never appears in ps or shell history):
+    printf '%s' "$TOKEN" | set-vault-token [--env /root/.openbao-operator.env] [--no-verify]
+
+WHY THIS EXISTS. Hand-rolled `sed -i 's|^BAO_TOKEN=.*|BAO_TOKEN=new|'` has now failed
+twice in the same way: the operator env line is `export BAO_TOKEN=`, so an anchored
+`^BAO_TOKEN=` matches NOTHING. sed still rewrites the file, so the mtime updates and the
+change LOOKS applied while the old, dead token is still in place. On 2026-08-24 that left
+hub-box holding a token that expired ten days earlier, looking freshly rotated.
+
+Three guarantees:
+  1. Matches BOTH `BAO_TOKEN=` and `export BAO_TOKEN=`, and if neither exists, APPENDS.
+     It can never silently do nothing -- it reports exactly what it changed.
+  2. Preserves every other key (BAO_ADDR, BAO_UNSEAL). Losing BAO_UNSEAL would break
+     auto-unseal on the next reboot, which is a worse outage than the one being fixed.
+  3. VERIFIES BY EXERCISE and ROLLS BACK. After writing, it runs the credential probe. If
+     the new token is not better than the old one, the previous file is restored. You
+     cannot install a token that does not work -- which is the whole class of bug here.
+"""
+from __future__ import annotations
+import argparse, os, shutil, subprocess, sys, tempfile
+from datetime import datetime, timezone
+
+PROBE = "vault-credential-probe"
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--env", default="/root/.openbao-operator.env")
+    ap.add_argument("--key", default="BAO_TOKEN")
+    ap.add_argument("--no-verify", action="store_true")
+    a = ap.parse_args()
+
+    token = sys.stdin.read().strip()
+    if not token:
+        print("set-vault-token: no token on stdin", file=sys.stderr)
+        return 2
+    if any(c.isspace() for c in token):
+        print("set-vault-token: token contains whitespace; refusing", file=sys.stderr)
+        return 2
+    if not os.path.exists(a.env):
+        print(f"set-vault-token: {a.env} does not exist", file=sys.stderr)
+        return 2
+
+    with open(a.env, encoding="utf-8") as fh:
+        original = fh.read()
+
+    out, replaced = [], 0
+    for line in original.splitlines():
+        stripped = line.strip()
+        body = stripped[len("export "):] if stripped.startswith("export ") else stripped
+        if body.split("=", 1)[0].strip() == a.key and "=" in body:
+            prefix = "export " if stripped.startswith("export ") else ""
+            out.append(f"{prefix}{a.key}={token}")
+            replaced += 1
+        else:
+            out.append(line)
+    if replaced == 0:
+        out.append(f"export {a.key}={token}")
+        print(f"  {a.key} not present -> APPENDED (this is why a bare sed no-ops)")
+    else:
+        print(f"  {a.key} replaced on {replaced} line(s)")
+
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    backup = f"{a.env}.bak-settoken-{stamp}"
+    shutil.copy2(a.env, backup)
+
+    d = os.path.dirname(a.env) or "."
+    fd, tmp = tempfile.mkstemp(dir=d)
+    with os.fdopen(fd, "w", encoding="utf-8") as fh:
+        fh.write("\n".join(out) + "\n")
+    os.chmod(tmp, 0o600)
+    os.replace(tmp, a.env)
+
+    for key in ("BAO_ADDR", "BAO_UNSEAL"):
+        if key in original and key not in open(a.env, encoding="utf-8").read():
+            shutil.copy2(backup, a.env)
+            print(f"set-vault-token: {key} would have been LOST; rolled back",
+                  file=sys.stderr)
+            return 1
+    print(f"  wrote {a.env} (backup: {backup})")
+
+    if a.no_verify or not os.path.exists(PROBE):
+        print("  NOT verified (no probe available)" if not a.no_verify else "  verify skipped")
+        return 0
+
+    print("  verifying by exercise...")
+    rc = subprocess.run([PROBE], capture_output=True).returncode
+    if rc == 0:
+        print("  VERIFIED: every required vault path is readable with the new token")
+        return 0
+    shutil.copy2(backup, a.env)
+    subprocess.run([PROBE], capture_output=True)   # restore the state file to reality
+    print(f"  probe still failing (rc={rc}) -> ROLLED BACK to the previous token.\n"
+          f"  The new token does not grant what the credential helper needs. Check the policy\n"
+          f"  list on the mint: it must include BOTH work-ops AND scm-read.", file=sys.stderr)
+    return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

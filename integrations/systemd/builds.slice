@@ -1,0 +1,36 @@
+# builds.slice: where resource-heavy builds run, with a ceiling they can actually hit.
+#
+# Builds used to run wherever they were launched, which on work-box meant inside
+# user-0.slice alongside every interactive session. On 2026-08-20 two Widget builds
+# and eight interactive sessions pinned that slice against MemoryHigh=8G for 1h42m: 92%
+# system CPU, ~2 GB/s of re-reads, file cache reclaimed to 1.8 MB, and oom_kill 0.
+# Nothing died, so nothing recovered.
+#
+# Moving builds here fixes the SHARING problem: a build no longer competes with the
+# sessions for one slice's budget, so it cannot starve the terminals you would need in
+# order to go and kill it.
+#
+# DELIBERATELY NO MemoryHigh. That is the lesson of the incident, not an oversight.
+# A brake below a wall holds the cgroup below the wall by reclaiming, which means the
+# wall is never reached and the in-cgroup OOM killer never fires. For interactive work
+# a brake is right: going slow beats being killed. For a BUILD the opposite is true:
+# a build that does not fit should die immediately and say so, because a build that
+# merely goes slow is indistinguishable from a hung one and costs hours before anyone
+# looks. Fail fast, fail alone, fail legibly.
+#
+# MemoryMax=6G against a 15G box: leaves ~10G for user-0.slice's real steady state
+# (~3G of sessions) plus docker/system (~3G) with room to spare. MemorySwapMax bounds
+# the thrash on the way to the ceiling: an unbounded swap turns a clean kill into the
+# 16h stall recorded on 2026-08-18.
+[Unit]
+Description=Resource-heavy builds (serialised by orrery heavy-build)
+Before=slices.target
+
+[Slice]
+MemoryAccounting=yes
+MemoryMax=6G
+MemorySwapMax=512M
+# Builds are batch work: yield CPU and IO to interactive sessions rather than
+# competing evenly with them.
+CPUWeight=20
+IOWeight=20

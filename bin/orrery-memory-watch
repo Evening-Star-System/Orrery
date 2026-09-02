@@ -1,0 +1,103 @@
+#!/usr/bin/env python3
+"""Push the memory-headroom verdict to Uptime Kuma, on a timer.
+
+WHY THIS EXISTS: on 2026-08-20 work-box stalled for 1h42m and the detection mechanism was
+an operator noticing the box felt wrong. Every conventional alarm stayed green through
+it, because the conventional alarms watch the wrong things:
+
+  * `oom_kill` was 0            (nothing died -- that WAS the failure)
+  * load was high, but load is high during any healthy build
+  * free memory looked fine     (4.4G "available", all of it unreclaimable in practice)
+
+The signal that was unambiguous the whole time is PSI plus a collapsed file cache, which
+is exactly what the memory-headroom check reads. This just runs that check on a timer and
+turns FAIL/DRIFT into a push.
+
+Kuma is a PUSH monitor here, deliberately: a pull monitor cannot distinguish "the box is
+fine" from "the box is too wedged to answer", and the second is the case we care about.
+A push monitor goes red on silence, so a box too stalled to run this timer alarms by not
+reporting.
+
+Config: /etc/orrery/memory-watch.conf, shell-style `KEY=value`.
+  KUMA_PUSH_URL=http://10.0.0.7:3001/api/push/XXXXXXXX
+Without it the script still evaluates and logs to the journal; it just cannot notify.
+"""
+
+from __future__ import annotations
+
+import os
+import sys
+import urllib.parse
+import urllib.request
+
+sys.path.insert(0, os.environ.get("ORRERY_HOME", "/opt/projects/esp/Orrery"))
+
+from orrery.reconciler.box import LocalBox  # noqa: E402
+from orrery.reconciler.checks.memory_headroom import MemoryHeadroomCheck  # noqa: E402
+from orrery.reconciler.model import Severity  # noqa: E402
+
+CONF = "/etc/orrery/memory-watch.conf"
+SLICES = [
+    {"name": "root sessions", "path": "/sys/fs/cgroup/user.slice/user-0.slice"},
+    {"name": "builds", "path": "/sys/fs/cgroup/builds.slice"},
+]
+TIMEOUT = 10
+# A CDN/WAF in front of the Kuma host will 403 the DEFAULT urllib User-Agent
+# ("Python-urllib/3.x") as a bot. Measured 2026-08-29 on work-box: Python-urllib -> 403,
+# curl/browser/any honest custom UA -> 200. Without this header every push silently fails
+# and the monitor sits there never receiving a heartbeat - an alarm that cannot fire, which
+# is worse than no alarm. Same class as the browser-UA requirement already documented for
+# Resend. Honest identifier, NOT a spoofed browser string.
+_UA = "ESS-Orrery/1.0 (+memory-headroom watch)"
+
+
+
+def _conf() -> dict:
+    out = {}
+    try:
+        with open(CONF, "r", encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                k, _, v = line.partition("=")
+                out[k.strip()] = v.strip().strip('"').strip("'")
+    except OSError:
+        pass
+    return out
+
+
+def main() -> int:
+    findings = MemoryHeadroomCheck().run({"slices": SLICES}, LocalBox())
+    # A slice that is simply not present is not news; builds.slice only exists while a
+    # build is running, and alarming on its absence would page on every idle hour.
+    findings = [f for f in findings if not (
+        f.severity == Severity.DRIFT and "not present" in f.message
+    )]
+    worst = max((f.severity for f in findings), default=Severity.OK)
+    lines = [f"[{f.severity.label}] {f.subject}: {f.message}" for f in findings]
+    detail = " | ".join(lines) or "no slices evaluated"
+
+    for line in lines:
+        print(line)
+
+    push = _conf().get("KUMA_PUSH_URL")
+    if not push:
+        print("no KUMA_PUSH_URL configured; evaluated only", file=sys.stderr)
+        return 0 if worst <= Severity.INFO else 1
+
+    status = "up" if worst <= Severity.WARN else "down"
+    qs = urllib.parse.urlencode({"status": status, "msg": detail[:900], "ping": ""})
+    sep = "&" if "?" in push else "?"
+    try:
+        req = urllib.request.Request(f"{push}{sep}{qs}", headers={"User-Agent": _UA})
+        with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:
+            resp.read(1024)
+    except Exception as exc:  # noqa: BLE001 - a push failure must not mask the verdict
+        print(f"kuma push failed: {exc}", file=sys.stderr)
+        return 2
+    return 0 if worst <= Severity.INFO else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

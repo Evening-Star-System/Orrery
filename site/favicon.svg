@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img" aria-label="ESS Orrery">
+  <circle cx="12" cy="12" r="10" fill="none" stroke="#d99f43" stroke-width="1.4" opacity=".65"/>
+  <ellipse cx="12" cy="12" rx="10" ry="4" fill="none" stroke="#d99f43" stroke-width="1.4" opacity=".65"/>
+  <circle cx="12" cy="12" r="2.6" fill="#f4c66b"/>
+  <circle cx="22" cy="12" r="1.2" fill="#c9d3e6"/>
+</svg>

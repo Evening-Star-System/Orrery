@@ -1,0 +1,849 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Get Started: Install and Reconcile a Fleet | ESS Orrery</title>
+<meta name="description" content="Install ESS Orrery with pip, run ess-orrery doctor to verify, then ess-orrery reconcile against a declared profile. Open core, AGPL, zero runtime dependencies.">
+<meta property="og:title" content="ESS Orrery">
+<meta property="og:type" content="website">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<meta property="og:site_name" content="ESS Orrery">
+<meta property="og:url" content="https://orrery.eveningstar.app/get-started">
+<meta property="og:image" content="https://orrery.eveningstar.app/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://orrery.eveningstar.app/og.png">
+<meta name="twitter:title" content="Get Started: Install and Reconcile a Fleet | ESS Orrery">
+<meta name="twitter:description" content="Install ESS Orrery with pip, run ess-orrery doctor to verify, then ess-orrery reconcile against a declared profile. Open core, AGPL, zero runtime dependencies.">
+<link rel="canonical" href="https://orrery.eveningstar.app/get-started">
+<meta property="og:title" content="Get Started: Install and Reconcile a Fleet | ESS Orrery">
+<meta property="og:description" content="Install ESS Orrery with pip, run ess-orrery doctor to verify, then ess-orrery reconcile against a declared profile. Open core, AGPL, zero runtime dependencies.">
+<style>
+  :root{
+    /* dark, verified WCAG AA (see DESIGN.md) */
+    --ground:#06080f; --ground-2:#0a0e1a; --panel:#0d1322; --card:#0f1728; --panel-2:#131d33;
+    --ink:#eef2fb; --muted:#a7b2ca; --faint:#7d89a4;
+    --gold:#f4c66b; --gold-deep:#e3b055; --silver:#cbd5ea;
+    --good:#6fe0a6; --drift:#f2b45a;
+    --line:rgba(150,170,210,.12); --line-2:rgba(150,170,210,.06); --line-lit:rgba(230,238,255,.10);
+    --orbit:rgba(155,175,215,.20);
+    --glow:rgba(244,198,107,.50);
+    --btn-bg:var(--gold); --btn-ink:#1a1206;
+    --shadow:0 40px 120px -30px rgba(0,0,0,.75);
+    --mono:ui-monospace,"SF Mono","JetBrains Mono","Cascadia Code",Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    --maxw:1200px;
+    color-scheme:dark;
+  }
+  @media (prefers-color-scheme:light){
+    :root{
+      --ground:#f3efe6; --ground-2:#efe9dd; --panel:#f7f2e8; --card:#faf6ee; --panel-2:#ece5d6;
+      --ink:#1f1c15; --muted:#5f5849; --faint:#6b6350;
+      --gold:#a9721f; --gold-deep:#8a5c17; --silver:#5c5443;
+      --good:#2f7d54; --drift:#8a5f12;
+      --line:rgba(40,34,22,.14); --line-2:rgba(40,34,22,.07); --line-lit:rgba(255,255,255,.65);
+      --orbit:rgba(60,50,30,.24);
+      --glow:rgba(169,114,31,.26);
+      --btn-bg:#6e4712; --btn-ink:#ffffff;
+      --shadow:0 30px 80px -30px rgba(60,45,20,.35);
+      color-scheme:light;
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#06080f; --ground-2:#0a0e1a; --panel:#0d1322; --card:#0f1728; --panel-2:#131d33;
+    --ink:#eef2fb; --muted:#a7b2ca; --faint:#7d89a4;
+    --gold:#f4c66b; --gold-deep:#e3b055; --silver:#cbd5ea;
+    --good:#6fe0a6; --drift:#f2b45a;
+    --line:rgba(150,170,210,.12); --line-2:rgba(150,170,210,.06); --line-lit:rgba(230,238,255,.10);
+    --orbit:rgba(155,175,215,.20); --glow:rgba(244,198,107,.50);
+    --btn-bg:var(--gold); --btn-ink:#1a1206; --shadow:0 40px 120px -30px rgba(0,0,0,.75);
+    color-scheme:dark;
+  }
+  :root[data-theme="light"]{
+    --ground:#f3efe6; --ground-2:#efe9dd; --panel:#f7f2e8; --card:#faf6ee; --panel-2:#ece5d6;
+    --ink:#1f1c15; --muted:#5f5849; --faint:#6b6350;
+    --gold:#a9721f; --gold-deep:#8a5c17; --silver:#5c5443;
+    --good:#2f7d54; --drift:#8a5f12;
+    --line:rgba(40,34,22,.14); --line-2:rgba(40,34,22,.07); --line-lit:rgba(255,255,255,.65);
+    --orbit:rgba(60,50,30,.24); --glow:rgba(169,114,31,.26);
+    --btn-bg:#6e4712; --btn-ink:#ffffff; --shadow:0 30px 80px -30px rgba(60,45,20,.35);
+    color-scheme:light;
+  }
+
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){ html{scroll-behavior:auto} }
+  body{
+    margin:0; background:var(--ground); color:var(--ink);
+    font-family:var(--sans); line-height:1.6; font-size:17px;
+    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+    overflow-x:hidden;
+  }
+  ::selection{background:var(--gold); color:#1a1206}
+  a{color:inherit}
+  img,canvas{max-width:100%}
+  .wrap{max-width:var(--maxw); margin:0 auto; padding:0 28px}
+  .mono{font-family:var(--mono)}
+  .tnum{font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1}
+
+  .eyebrow{
+    font-family:var(--mono); font-size:12px; letter-spacing:.24em;
+    text-transform:uppercase; color:var(--gold-deep); margin:0;
+  }
+  h1,h2,h3,h4{margin:0; text-wrap:balance; font-family:var(--sans); font-weight:640}
+  h1{font-weight:680}
+
+  /* skip link */
+  .skip{
+    position:absolute; left:16px; top:-60px; z-index:200;
+    background:var(--gold); color:#1a1206; font-family:var(--mono); font-size:13px;
+    font-weight:600; text-decoration:none; padding:10px 16px; border-radius:3px; transition:top .15s;
+  }
+  .skip:focus{top:16px}
+
+  /* backdrop */
+  .stars{position:fixed; inset:0; z-index:0; pointer-events:none; opacity:.9}
+  .aura{
+    position:fixed; z-index:0; pointer-events:none; left:50%; top:-8%;
+    width:min(1200px,120vw); aspect-ratio:1/1; transform:translateX(-50%);
+    background:radial-gradient(closest-side, var(--glow), transparent 70%);
+    opacity:.55; filter:blur(10px);
+  }
+
+  /* top bar */
+  header{
+    position:sticky; top:0; z-index:40;
+    backdrop-filter:saturate(140%) blur(12px);
+    background:color-mix(in srgb, var(--ground) 74%, transparent);
+    border-bottom:1px solid var(--line);
+  }
+  .bar{display:flex; align-items:center; justify-content:space-between; height:64px}
+  .brand{display:flex; align-items:center; gap:11px; font-size:18px; letter-spacing:.01em; text-decoration:none}
+  .brand b{font-weight:670} .brand span{font-weight:420; color:var(--muted)}
+  .sigil{width:24px; height:24px; display:block; filter:drop-shadow(0 0 6px var(--glow))}
+  nav.primary{display:flex; align-items:center; gap:8px}
+  nav.primary .navlink{font-family:var(--mono); font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); text-decoration:none; padding:9px 12px; border-radius:4px; transition:color .18s, background .18s}
+  nav.primary .navlink:hover{color:var(--ink); background:color-mix(in srgb, var(--ink) 7%, transparent)}
+  nav.primary a.navlink[aria-current="page"]{color:var(--gold-deep)}
+  .navcta{font-family:var(--mono); font-size:12px; letter-spacing:.06em; text-transform:uppercase; text-decoration:none;
+    background:var(--btn-bg); color:var(--btn-ink); font-weight:640; padding:9px 15px; border-radius:5px; margin-left:6px;
+    box-shadow:0 0 0 1px color-mix(in srgb, var(--gold) 40%, transparent), 0 8px 22px -10px var(--glow); transition:transform .15s, box-shadow .2s}
+  .navcta:hover{transform:translateY(-1px); box-shadow:0 0 0 1px var(--gold), 0 12px 28px -10px var(--glow)}
+  .navcta[aria-current="page"]{color:var(--btn-ink)}
+  .toggle{
+    font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--muted); background:transparent; border:1px solid var(--line);
+    border-radius:5px; padding:8px 11px; cursor:pointer; transition:.18s;
+  }
+  .toggle:hover{border-color:var(--gold-deep); color:var(--ink)}
+  .navtoggle{
+    display:none; align-items:center; justify-content:center;
+    width:40px; height:40px; padding:0; margin-left:8px; flex:0 0 auto;
+    background:transparent; border:1px solid var(--line); border-radius:6px;
+    cursor:pointer; transition:border-color .18s;
+  }
+  .navtoggle:hover{ border-color:var(--gold-deep) }
+  .navtoggle-bars{ position:relative; display:block; width:18px; height:2px; border-radius:2px; background:var(--ink) }
+  .navtoggle-bars::before, .navtoggle-bars::after{ content:""; position:absolute; left:0; width:18px; height:2px; border-radius:2px; background:var(--ink); transition:transform .2s ease, top .2s ease, opacity .2s ease }
+  .navtoggle-bars::before{ top:-6px }
+  .navtoggle-bars::after{ top:6px }
+  .navtoggle[aria-expanded="true"] .navtoggle-bars{ background:transparent }
+  .navtoggle[aria-expanded="true"] .navtoggle-bars::before{ top:0; transform:rotate(45deg) }
+  .navtoggle[aria-expanded="true"] .navtoggle-bars::after{ top:0; transform:rotate(-45deg) }
+  @media (max-width:900px){
+    .navtoggle{ display:inline-flex }
+    nav.primary{
+      display:flex; flex-direction:column; align-items:stretch; gap:0;
+      position:absolute; left:0; right:0; top:100%; z-index:39;
+      background:var(--ground); border-bottom:1px solid var(--line);
+      box-shadow:var(--shadow); padding:8px 0;
+      opacity:0; visibility:hidden; transform:translateY(-6px); pointer-events:none;
+      transition:opacity .18s ease, transform .18s ease, visibility 0s linear .18s;
+    }
+    nav.primary.open{
+      opacity:1; visibility:visible; transform:translateY(0); pointer-events:auto;
+      transition:opacity .18s ease, transform .18s ease;
+    }
+    nav.primary .navlink{
+      display:flex; align-items:center; width:100%; box-sizing:border-box;
+      min-height:44px; padding:12px 28px; font-size:13px; border-radius:0;
+    }
+    nav.primary .toggle{ margin:10px 28px; align-self:flex-start; min-height:44px }
+    nav.primary .navcta{ margin:10px 28px; justify-content:center; text-align:center; min-height:44px; box-sizing:border-box }
+  }
+  @media (prefers-reduced-motion:reduce){
+    nav.primary{ transition:none }
+    nav.primary.open{ transition:none }
+    .navtoggle-bars::before, .navtoggle-bars::after{ transition:none }
+  }
+
+  /* shared panel look: hairline + light-catching top edge */
+  .panel{position:relative; background:var(--card); border:1px solid var(--line); border-radius:12px;
+    box-shadow:inset 0 1px 0 var(--line-lit), var(--shadow)}
+
+  /* ---- hero-style bits reused on this page ---- */
+  .lede{margin:18px 0 0; font-size:clamp(17px,1.5vw,20px); line-height:1.55; color:var(--muted); max-width:48ch}
+  .cmd{margin-top:22px; display:flex; align-items:center; gap:10px; font-family:var(--mono); font-size:13.5px;
+    background:var(--ground-2); border:1px solid var(--line); border-radius:8px; padding:11px 12px; max-width:min(100%,420px);
+    box-shadow:inset 0 1px 0 var(--line-lit)}
+  .cmd .p{color:var(--gold-deep)} .cmd code{color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .cmd .cp{margin-left:auto; flex:0 0 auto; font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase;
+    background:transparent; color:var(--muted); border:1px solid var(--line); border-radius:5px; padding:6px 9px; cursor:pointer; transition:.15s}
+  .cmd .cp:hover{border-color:var(--gold-deep); color:var(--ink)}
+  .cta-row{display:flex; gap:12px; margin-top:26px; flex-wrap:wrap; align-items:center}
+  .btn{font-family:var(--mono); font-size:13px; letter-spacing:.05em; text-transform:uppercase;
+    text-decoration:none; padding:13px 20px; border-radius:7px; transition:transform .15s, box-shadow .2s, border-color .2s; display:inline-flex; align-items:center; gap:8px; cursor:pointer; border:0}
+  .btn-p{background:var(--btn-bg); color:var(--btn-ink); font-weight:640;
+    box-shadow:0 0 0 1px color-mix(in srgb, var(--gold) 45%, transparent), 0 14px 34px -14px var(--glow)}
+  .btn-p:hover{transform:translateY(-1px); box-shadow:0 0 0 1px var(--gold), 0 18px 40px -14px var(--glow)}
+  .btn-s{color:var(--ink); border:1px solid var(--line); box-shadow:inset 0 1px 0 var(--line-lit); background:transparent}
+  .btn-s:hover{border-color:var(--gold-deep); transform:translateY(-1px)}
+
+  /* ---- sections ---- */
+  section{position:relative; z-index:1}
+  .band{border-top:1px solid var(--line); padding:clamp(72px,9vw,128px) 0}
+  .band.plain{border-top:0}
+  .sec-head{max-width:64ch}
+  .sec-head .idx{font-family:var(--mono); font-size:12px; color:var(--gold-deep); letter-spacing:.2em}
+  .sec-head h2{font-size:clamp(28px,3.6vw,44px); letter-spacing:-.024em; line-height:1.05; margin:14px 0 0}
+  .sec-sub{color:var(--muted); max-width:66ch; margin:18px 0 0; font-size:clamp(16px,1.3vw,18px)}
+  .sec-note{color:var(--muted); font-size:14.5px; max-width:68ch; line-height:1.6}
+  .sec-top{margin-bottom:38px}
+
+  /* ---- footer ---- */
+  footer{border-top:1px solid var(--line); padding:56px 0 30px; position:relative; z-index:1}
+  .foot-grid{display:flex; justify-content:space-between; gap:32px; flex-wrap:wrap; align-items:flex-start}
+  .foot-brand{display:flex; align-items:center; gap:10px; font-size:16px}
+  .foot-brand b{font-weight:660}
+  .foot-nav{display:flex; flex-wrap:wrap; gap:8px 22px; font-family:var(--mono); font-size:12px; letter-spacing:.04em}
+  .foot-nav a{color:var(--muted); text-decoration:none} .foot-nav a:hover{color:var(--gold-deep)}
+  .foot-meta{margin-top:26px; font-family:var(--mono); font-size:11.5px; color:var(--faint); letter-spacing:.03em}
+  /* closing seal: understated, present, never competes for attention (see DESIGN.md) */
+  .istl{position:relative; z-index:1; text-align:center; font-family:var(--serif); font-style:italic;
+    font-size:12.5px; letter-spacing:.05em; color:var(--gold-deep); padding:8px 0 42px}
+
+  /* reveal + focus */
+  .rise{opacity:0; transform:translateY(18px); transition:opacity .7s cubic-bezier(.2,.7,.2,1), transform .7s cubic-bezier(.2,.7,.2,1)}
+  .rise.in{opacity:1; transform:none}
+  :focus-visible{outline:2px solid var(--gold); outline-offset:3px; border-radius:4px}
+  @media (prefers-reduced-motion:reduce){ .rise{opacity:1; transform:none; transition:none} }
+
+  /* =====================================================================
+     Page-specific: get started
+     ===================================================================== */
+  .sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden;
+    clip:rect(0,0,0,0); white-space:nowrap; border:0}
+
+  /* intro */
+  .intro{position:relative; z-index:1; padding:clamp(40px,7vw,80px) 0 12px; max-width:60ch}
+  .intro h1{font-size:clamp(36px,5.6vw,60px); line-height:1.05; letter-spacing:-.03em; margin:18px 0 0; font-weight:700}
+  .intro h1 .thin{color:var(--muted); font-weight:600}
+  .intro .lede{max-width:60ch}
+
+  /* command blocks: an inset well, a mono label bar, a copy button */
+  .codeblock{margin:24px 0; border:1px solid var(--line); border-radius:10px; overflow:hidden;
+    background:var(--ground-2); box-shadow:inset 0 1px 0 var(--line-lit); max-width:100%}
+  .codeblock-bar{display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:10px 14px; border-bottom:1px solid var(--line-2)}
+  .codeblock-label{font-family:var(--mono); font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted)}
+  .copybtn{
+    font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--muted); background:transparent; border:1px solid var(--line);
+    border-radius:5px; padding:6px 10px; cursor:pointer; transition:.15s; min-width:64px;
+  }
+  .copybtn:hover{border-color:var(--gold-deep); color:var(--ink)}
+  .codeblock-pre{margin:0; padding:15px 16px; overflow-x:auto; font-size:13.5px; line-height:1.7}
+  .codeblock-pre code{white-space:pre; font-family:var(--mono)}
+  .codeblock-pre .p{color:var(--gold-deep)}
+  .codeblock-pre .c{color:var(--muted)}
+
+  /* captured output: a distinct, slightly raised well */
+  .out{margin:12px 0 26px; border:1px solid var(--line-2); border-radius:10px; overflow-x:auto;
+    background:var(--panel); padding:15px 16px; font-size:13px; line-height:1.75;
+    box-shadow:inset 0 1px 0 var(--line-lit)}
+  .out pre{margin:0; white-space:pre; font-family:var(--mono)}
+  /* severity color is a secondary cue only: the word itself (ok/info/warn/DRIFT/FAIL)
+     is what conveys meaning. --good and --drift do not hold 4.5:1 at this text size
+     against --panel in both themes, so they are not used here; --muted and --ink do. */
+  .out .sv-ok, .out .sv-info, .out .sv-warn{color:var(--muted)}
+  .out .sv-drift, .out .sv-fail{color:var(--ink); font-weight:640}
+  .out-cap{font-family:var(--mono); font-size:11.5px; color:var(--muted); margin:18px 0 8px}
+
+  /* six-checks table + command reference table */
+  .table-wrap{overflow-x:auto; border:1px solid var(--line); border-radius:10px; margin:22px 0}
+  .table-wrap:focus-visible{outline:2px solid var(--gold); outline-offset:-2px}
+  table{border-collapse:collapse; width:100%; min-width:540px; font-size:14.5px}
+  caption{text-align:left; font-family:var(--mono); font-size:11px; letter-spacing:.12em;
+    text-transform:uppercase; color:var(--muted); padding:12px 16px; background:var(--ground-2); border-bottom:1px solid var(--line-2)}
+  th,td{text-align:left; padding:12px 16px; border-bottom:1px solid var(--line-2); vertical-align:top}
+  thead th{font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--gold-deep); background:var(--ground-2)}
+  tbody td{color:var(--muted)}
+  tbody td:first-child, tbody th{color:var(--ink); font-family:var(--mono); font-size:13px; white-space:nowrap}
+  tbody tr:last-child td, tbody tr:last-child th{border-bottom:0}
+
+  /* free-core card (the .plan/.panel look) */
+  .tier{position:relative; background:var(--card); border:1px solid var(--line); border-radius:12px;
+    padding:32px 30px; max-width:640px; box-shadow:inset 0 1px 0 var(--line-lit)}
+  .tier .tt{font-family:var(--mono); font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--gold-deep)}
+  .tier h3{font-size:23px; margin:14px 0 8px; font-weight:640; letter-spacing:-.012em}
+  .tier .lic{font-family:var(--mono); font-size:12.5px; color:var(--gold-deep)}
+  .tier p{color:var(--muted); font-size:15px; margin:14px 0 0; line-height:1.6}
+  .tier ul{margin:18px 0 0; padding:0; list-style:none}
+  .tier li{color:var(--muted); font-size:14.5px; padding:8px 0 8px 20px; position:relative; border-top:1px solid var(--line-2)}
+  .tier li:first-child{border-top:none}
+  .tier li::before{content:"+"; position:absolute; left:0; color:var(--gold-deep); font-family:var(--mono)}
+  .onward{margin-top:26px; font-size:15px; color:var(--muted); line-height:1.6}
+  .onward a{color:var(--gold-deep); text-decoration:underline; text-underline-offset:3px}
+  .onward a:hover{color:var(--ink)}
+
+  /* troubleshooting list */
+  .fixes{display:grid; gap:22px; max-width:76ch}
+  .fix{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:18px 20px;
+    box-shadow:inset 0 1px 0 var(--line-lit)}
+  .fix dt{font-family:var(--sans); font-size:14.5px; color:var(--ink); font-weight:640; letter-spacing:-.006em}
+  .fix dd{margin:8px 0 0; color:var(--muted); font-size:14.5px; line-height:1.6}
+  .fix dd code{font-family:var(--mono); font-size:13px; color:var(--gold-deep); background:var(--ground-2);
+    padding:1px 6px; border-radius:4px; border:1px solid var(--line-2)}
+</style>
+<noscript><style>.rise{opacity:1 !important; transform:none !important}</style></noscript>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "SoftwareApplication",
+      "@id": "https://orrery.eveningstar.app/get-started#software",
+      "name": "ESS Orrery",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Linux",
+      "description": "Install ESS Orrery with pip, run ess-orrery doctor to verify, then ess-orrery reconcile against a declared profile. Open core, AGPL, zero runtime dependencies.",
+      "license": "https://www.gnu.org/licenses/agpl-3.0.html",
+      "url": "https://orrery.eveningstar.app/",
+      "offers": [
+        {
+          "@type": "Offer",
+          "name": "Core",
+          "price": "0",
+          "priceCurrency": "USD",
+          "availability": "https://schema.org/InStock",
+          "description": "Self-hosted, AGPL-3.0-or-later, unlimited boxes, one operator. Free forever, not a trial."
+        },
+        {
+          "@type": "Offer",
+          "name": "Operator",
+          "price": "49",
+          "priceCurrency": "USD",
+          "availability": "https://schema.org/PreOrder",
+          "description": "Hosted control plane and governed autonomy, 1 operator seat, up to 10 boxes. Early access, billed monthly."
+        },
+        {
+          "@type": "Offer",
+          "name": "Team",
+          "price": "199",
+          "priceCurrency": "USD",
+          "availability": "https://schema.org/PreOrder",
+          "description": "5 operator seats, up to 50 boxes, approvals workflow, full audit log, SSO. Early access, billed monthly."
+        },
+        {
+          "@type": "Offer",
+          "name": "Enterprise",
+          "price": "999",
+          "priceCurrency": "USD",
+          "availability": "https://schema.org/PreOrder",
+          "description": "Unlimited operator seats and boxes, linked secret rotation, audited managed plane. From $999/mo, early access."
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "ESS Orrery",
+          "item": "https://orrery.eveningstar.app/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Get Started",
+          "item": "https://orrery.eveningstar.app/get-started"
+        }
+      ]
+    }
+  ]
+}
+</script>
+  <script defer src="https://analytics.ninthstar.org/getinfo" data-website-id="0bd58f0a-2425-4d69-ad47-bf66c762359e"></script>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<div class="aura" aria-hidden="true"></div>
+<canvas class="stars" id="stars" aria-hidden="true"></canvas>
+
+<header>
+  <div class="wrap bar">
+    <a class="brand" href="/" aria-label="ESS Orrery, home">
+      <svg class="sigil" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="12" cy="12" r="10" stroke="var(--gold-deep)" stroke-width="1" opacity=".5"/>
+        <ellipse cx="12" cy="12" rx="10" ry="4" stroke="var(--gold-deep)" stroke-width="1" opacity=".5"/>
+        <circle cx="12" cy="12" r="2.3" fill="var(--gold)"/>
+        <circle cx="22" cy="12" r="1.4" fill="var(--silver)"/>
+      </svg>
+      <b>ESS Orrery</b>
+    </a>
+    <button class="navtoggle" id="navToggle" type="button" aria-expanded="false" aria-controls="primaryNav" aria-label="Open menu">
+      <span class="navtoggle-bars" aria-hidden="true"></span>
+    </button>
+    <nav class="primary" id="primaryNav" aria-label="Primary">
+      <a class="navlink" href="/features">Reconciler</a>
+      <a class="navlink" href="/compare">Compare</a>
+      <a class="navlink" href="/pricing">Pricing</a>
+      <a class="navlink" href="/docs">Docs</a>
+      <button class="toggle" id="themeBtn" aria-label="Toggle light and dark theme">Light</button>
+      <a class="navcta" href="/get-started" aria-current="page">Get started</a>
+    </nav>
+  </div>
+</header>
+<script>
+(function(){
+  "use strict";
+  var toggle = document.getElementById("navToggle"), nav = document.getElementById("primaryNav");
+  if(!toggle || !nav) return;
+  function closeNav(){
+    nav.classList.remove("open");
+    toggle.setAttribute("aria-expanded","false");
+  }
+  function openNav(){
+    nav.classList.add("open");
+    toggle.setAttribute("aria-expanded","true");
+  }
+  toggle.addEventListener("click", function(){
+    if(nav.classList.contains("open")){ closeNav(); } else { openNav(); }
+  });
+  nav.addEventListener("click", function(e){
+    if(e.target.closest("a")){ closeNav(); }
+  });
+  document.addEventListener("keydown", function(e){
+    if(e.key === "Escape" && nav.classList.contains("open")){ closeNav(); toggle.focus(); }
+  });
+  document.addEventListener("click", function(e){
+    if(nav.classList.contains("open") && !nav.contains(e.target) && !toggle.contains(e.target)){ closeNav(); }
+  });
+  window.matchMedia("(min-width:901px)").addEventListener("change", function(mq){
+    if(mq.matches){ closeNav(); }
+  });
+})();
+</script>
+
+<main id="main" tabindex="-1">
+
+  <section class="wrap intro">
+    <span class="eyebrow rise">Get started</span>
+    <h1 class="rise">From a blank shell<br><span class="thin">to a fleet held in sync.</span></h1>
+    <p class="lede rise">Four real commands: install it, let it check its own install, declare the shape of
+      a box, then watch the reconciler measure that box against the declaration. Nothing here is simulated
+      below.</p>
+    <div class="cmd rise">
+      <span class="p" aria-hidden="true">$</span>
+      <code>pip install ess-orrery &amp;&amp; ess-orrery doctor</code>
+      <button class="cp" id="copyHero" aria-label="Copy: pip install ess-orrery and ess-orrery doctor">Copy</button>
+    </div>
+    <div class="cta-row rise">
+      <a class="btn btn-p" href="#install">Start installing</a>
+      <a class="btn btn-s" href="/#model">Open core, AGPL</a>
+    </div>
+  </section>
+
+  <section class="band" id="install">
+    <div class="wrap">
+      <div class="sec-head sec-top rise"><span class="idx">STEP 01</span><h2>Install the core.</h2>
+        <p class="sec-sub">The engines (reconciler, context) are stdlib-only: zero runtime dependencies,
+          Python 3.11 or newer. The themed terminal deck is a separate, optional extra so the core install
+          never has to pull in a TUI framework it doesn't need.</p>
+      </div>
+
+      <div class="codeblock rise">
+        <div class="codeblock-bar">
+          <span class="codeblock-label">core</span>
+          <button type="button" class="copybtn" data-copy="pip install ess-orrery" aria-label="Copy: pip install ess-orrery">Copy</button>
+        </div>
+        <pre class="codeblock-pre mono" tabindex="0" aria-label="Code, scrollable"><code><span class="p">$</span> pip install ess-orrery</code></pre>
+      </div>
+
+      <div class="codeblock rise">
+        <div class="codeblock-bar">
+          <span class="codeblock-label">optional: the deck</span>
+          <button type="button" class="copybtn" data-copy="pip install 'ess-orrery[tui]'" aria-label="Copy: pip install ess-orrery with the tui extra">Copy</button>
+        </div>
+        <pre class="codeblock-pre mono" tabindex="0" aria-label="Code, scrollable"><code><span class="p">$</span> pip install 'ess-orrery[tui]'  <span class="c"># themed terminal deck (textual)</span></code></pre>
+      </div>
+
+      <p class="sec-note rise">Installing from a clone instead of a package does the same thing: <code class="mono">pip install .</code> from the repository root (<code class="mono">pip install '.[tui]'</code> for the deck extra).</p>
+    </div>
+  </section>
+
+  <section class="band" id="doctor">
+    <div class="wrap">
+      <div class="sec-head sec-top rise"><span class="idx">STEP 02</span><h2>Let it check its own install.</h2>
+        <p class="sec-sub">Almost nothing in this category can prove it is still correctly installed a
+          month later. <code class="mono">doctor</code> is that proof, run on demand: it confirms the right
+          Python is present, the package imports, every reconciler check is registered, and every
+          subcommand is reachable. It never asks you to trust a note that says the install is fine.</p>
+      </div>
+
+      <div class="codeblock rise">
+        <div class="codeblock-bar">
+          <span class="codeblock-label">verify</span>
+          <button type="button" class="copybtn" data-copy="ess-orrery doctor" aria-label="Copy: ess-orrery doctor">Copy</button>
+        </div>
+        <pre class="codeblock-pre mono" tabindex="0" aria-label="Code, scrollable"><code><span class="p">$</span> ess-orrery doctor</code></pre>
+      </div>
+
+      <p class="out-cap rise">Real output, captured from a fresh install (your Python and package versions will differ):</p>
+      <div class="out rise" tabindex="0" role="group" aria-label="Command output, scrollable">
+        <pre><code>  <span class="sv-ok">[ok ]</span> python&gt;=3.11: 3.12
+  <span class="sv-ok">[ok ]</span> stdlib tomllib: present
+  <span class="sv-ok">[ok ]</span> import orrery: 0.1.0
+  <span class="sv-ok">[ok ]</span> reconciler checks: all present
+  <span class="sv-ok">[ok ]</span> import context engine: ok
+  <span class="sv-ok">[ok ]</span> cli entry point: orrery.cli:main
+  <span class="sv-ok">[ok ]</span> tui extra (optional): installed
+
+healthy</code></pre>
+      </div>
+      <p class="sec-note rise">Add <code class="mono">--json</code> for a machine-readable result a CI job can check.</p>
+    </div>
+  </section>
+
+  <section class="band" id="profile">
+    <div class="wrap">
+      <div class="sec-head sec-top rise"><span class="idx">STEP 03</span><h2>Declare the shape of a box.</h2>
+        <p class="sec-sub">A profile is a TOML file that declares what a box <em>should</em> be: which
+          paths must exist, which edges it should be able to reach, which secrets are wired to which
+          consumers, which counts must never quietly shrink. It is per-installation data, not part of the
+          core, and it never leaves your box: write it locally, keep it out of git if it names real hosts
+          or paths. The engine and its checks do not change between installs, only the profile does.</p>
+      </div>
+
+      <div class="codeblock rise" style="max-width:100%">
+        <div class="codeblock-bar">
+          <span class="codeblock-label">illustrative profile.toml</span>
+          <button type="button" class="copybtn" data-copy="schema = 1
+box = &quot;runtime-01&quot;
+
+[[checks]]
+id = &quot;declared-presence&quot;
+required = [
+  &quot;/etc/myapp/config.toml&quot;,
+]
+
+[[checks]]
+id = &quot;floors&quot;
+
+  [[checks.floors]]
+  name = &quot;backup archive floor&quot;
+  path = &quot;/var/backups/myapp&quot;
+  kind = &quot;file_count&quot;
+  min = 7" aria-label="Copy the illustrative profile">Copy</button>
+        </div>
+        <pre class="codeblock-pre mono" tabindex="0" aria-label="Code, scrollable"><code>schema = 1
+box = "runtime-01"
+
+[[checks]]
+id = "declared-presence"
+required = [
+  "/etc/myapp/config.toml",
+]
+
+[[checks]]
+id = "floors"
+
+  [[checks.floors]]
+  name = "backup archive floor"
+  path = "/var/backups/myapp"
+  kind = "file_count"
+  min = 7</code></pre>
+      </div>
+      <p class="sec-note rise">The full syntax for all six checks ships in the repo at <code class="mono">profiles/example.toml</code>, commented field by field. Copy it, point it at real paths, delete what you don't need.</p>
+
+      <div class="table-wrap rise" role="region" aria-label="The six checks a profile can declare, scrollable" tabindex="0">
+        <table>
+          <caption>The six checks a profile can declare</caption>
+          <thead>
+            <tr><th scope="col">Check id</th><th scope="col">What it proves</th></tr>
+          </thead>
+          <tbody>
+            <tr><th scope="row">org-map</th><td>One source-of-truth table agrees with every consumer that re-encodes it.</td></tr>
+            <tr><th scope="row">fleet-reach</th><td>Actual ssh reach matches the declared matrix; a reopened denied edge is drift.</td></tr>
+            <tr><th scope="row">declared-presence</th><td>Required members exist; planned-absent paths stay absent.</td></tr>
+            <tr><th scope="row">secret-edges</th><td>The secret-to-consumer graph holds. It maps which secret feeds what, by a non-secret name, and never reads a secret's value.</td></tr>
+            <tr><th scope="row">floors</th><td>Counts stay within declared floors and ceilings; a floor far below reality is flagged stale.</td></tr>
+            <tr><th scope="row">managed-settings</th><td>The enforcement layer stays root-owned and unwritable by anyone else.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="reconcile">
+    <div class="wrap">
+      <div class="sec-head sec-top rise"><span class="idx">STEP 04</span><h2>Run the reconciler.</h2>
+        <p class="sec-sub">A fact here is not "declared", it is declared <em>and</em> its probe passes,
+          continuously. Reconcile is report-only: it measures and prints findings, it never changes a box.
+          Try it immediately against the example profile that ships in the repo, unedited: every path in
+          it is a placeholder, so every check reports drift or failure. That is the honest, correct
+          behavior, not a bug.</p>
+      </div>
+
+      <div class="codeblock rise">
+        <div class="codeblock-bar">
+          <span class="codeblock-label">the shipped example, unedited</span>
+          <button type="button" class="copybtn" data-copy="ess-orrery reconcile --profile profiles/example.toml" aria-label="Copy: ess-orrery reconcile against the example profile">Copy</button>
+        </div>
+        <pre class="codeblock-pre mono" tabindex="0" aria-label="Code, scrollable"><code><span class="p">$</span> ess-orrery reconcile --profile profiles/example.toml</code></pre>
+      </div>
+
+      <p class="out-cap rise">Real output, unedited, run against the example profile as shipped:</p>
+      <div class="out rise" tabindex="0" role="group" aria-label="Command output, scrollable">
+        <pre><code>reconciler: example
+
+[declared-presence]
+  <span class="sv-fail">FAIL</span>  /path/that/must/exist: required member is missing  (expected 'present', observed 'absent')
+  <span class="sv-info">info</span>  /path/that/should/not/exist/yet: absent as planned
+
+[fleet-reach]
+  <span class="sv-fail">FAIL</span>  some-box: declared-reachable link is DOWN  (expected 'reachable', observed 'unreachable')
+  <span class="sv-ok">ok  </span>  a-deliberately-closed-box: correctly denied
+
+[floors]
+  <span class="sv-drift">DRIFT</span> example content floor: floor path is missing  (expected 'present', observed 'absent')
+  <span class="sv-drift">DRIFT</span> example digest budget: floor path is missing  (expected 'present', observed 'absent')
+
+[managed-settings]
+  <span class="sv-fail">FAIL</span>  /path/to/an/enforcement/file: required enforcement file is missing  (expected 'present', observed 'absent')
+  <span class="sv-info">info</span>  /path/to/a/planned/managed-settings/file: not yet in place (planned)
+
+[org-map]
+  <span class="sv-warn">warn</span>  org-map: source of truth unreadable: /path/to/orgs.tsv
+
+[secret-edges]
+  <span class="sv-drift">DRIFT</span> some-store/tokens/example -&gt; /path/to/a/consumer/that/references/it: declared consumer file is missing or unreadable  (expected 'references the secret', observed 'file absent')
+  <span class="sv-warn">warn</span>  some-store/tokens/example: discover_root does not exist: /path/to/scan/for/undeclared/references
+
+summary: OK=1 INFO=2 WARN=2 DRIFT=3 FAIL=3  -&gt;  DRIFT DETECTED (exit 1)</code></pre>
+      </div>
+
+      <p class="sec-sub rise" style="margin-top:0">Once your own profile names real paths and real boxes, point at it the same way:</p>
+      <div class="codeblock rise">
+        <div class="codeblock-bar">
+          <span class="codeblock-label">your profile</span>
+          <button type="button" class="copybtn" data-copy="ess-orrery reconcile --profile my-fleet.toml" aria-label="Copy: ess-orrery reconcile against your own profile">Copy</button>
+        </div>
+        <pre class="codeblock-pre mono" tabindex="0" aria-label="Code, scrollable"><code><span class="p">$</span> ess-orrery reconcile --profile my-fleet.toml</code></pre>
+      </div>
+
+      <p class="sec-note rise">Every finding above came from a live probe against the box, not from a note that once said something was true. Exit code is 0 when the worst finding is at or below <span class="sv-info mono">info</span>, 1 on drift or worse, 2 if the profile itself fails to load (a clean message, never a traceback). Add <code class="mono">--json</code> for scripting, <code class="mono">--check ID</code> to run one check, <code class="mono">--ssh HOST</code> to measure a remote box read-only.</p>
+    </div>
+  </section>
+
+  <section class="band" id="commands">
+    <div class="wrap">
+      <div class="sec-head sec-top rise"><span class="idx">Reference</span><h2>Every command.</h2>
+        <p class="sec-sub">The whole surface is five subcommands. <code class="mono">ess-orrery</code> with no
+          arguments, or <code class="mono">ess-orrery --help</code>, prints this same list.</p>
+      </div>
+      <div class="table-wrap rise" role="region" aria-label="Every ess-orrery command, scrollable" tabindex="0">
+        <table>
+          <caption>ess-orrery &lt;command&gt; [args]</caption>
+          <thead>
+            <tr><th scope="col">Command</th><th scope="col">What it does</th></tr>
+          </thead>
+          <tbody>
+            <tr><th scope="row">reconcile</th><td>Run a reconciler profile (drift report). <code class="mono">--profile PATH</code> required.</td></tr>
+            <tr><th scope="row">context</th><td>Resolve the context for a working directory. <code class="mono">--config PATH</code> required.</td></tr>
+            <tr><th scope="row">deck</th><td>Launch the themed terminal deck (needs the <code class="mono">tui</code> extra).</td></tr>
+            <tr><th scope="row">doctor</th><td>Verify this installation.</td></tr>
+            <tr><th scope="row">update</th><td>Upgrade in place; never touches your setup. <code class="mono">--check</code> just reports.</td></tr>
+            <tr><th scope="row">backup</th><td>Write your setup to a portable archive.</td></tr>
+            <tr><th scope="row">restore</th><td>Restore your setup from a backup archive.</td></tr>
+            <tr><th scope="row">version</th><td>Print the version.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="free">
+    <div class="wrap">
+      <div class="sec-head sec-top rise"><span class="idx">Free core</span><h2>Unlimited boxes. One operator. Self-host.</h2>
+        <p class="sec-sub">The core is free to run, study, and modify at any scale of your own fleet,
+          because software that reaches every one of your boxes should be auditable in full, not taken on
+          trust.</p>
+      </div>
+      <div class="tier rise">
+        <div class="tt">The core</div>
+        <h3>ESS Orrery</h3>
+        <div class="lic mono">AGPL-3.0-or-later</div>
+        <p>Unlimited boxes, one operator, self-hosted. Zero runtime dependencies, read-only, identity-free.</p>
+        <ul>
+          <li>The reconciler and its six checks</li>
+          <li>Per-directory context isolation</li>
+          <li>A self-verifying install (<code class="mono">doctor</code>) and the full CLI</li>
+          <li>The themed terminal deck (optional extra)</li>
+        </ul>
+        <p class="onward">The commercial layer adds governed-autonomy for consequential work, a hosted control plane, and the graphical fleet view. <a href="/#model">See the full model &rarr;</a></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="band plain" id="next">
+    <div class="wrap">
+      <div class="sec-head sec-top rise"><span class="idx">If it doesn't check out</span><h2>Common first-run snags.</h2></div>
+      <dl class="fixes rise">
+        <div class="fix">
+          <dt>ess-orrery doctor reports anything other than "healthy"</dt>
+          <dd>Check the failing line's Python version requirement (3.11 or newer) and reinstall with <code>pip install --force-reinstall ess-orrery</code>. The tui line is the one exception: "not installed (optional)" is a pass, not a failure.</dd>
+        </div>
+        <div class="fix">
+          <dt>ess-orrery deck exits with a tui extra error</dt>
+          <dd>Real message: "the deck needs the 'tui' extra (textual not installed). install with: pip install 'ess-orrery[tui]'". Run that install line, then retry.</dd>
+        </div>
+        <div class="fix">
+          <dt>ess-orrery reconcile exits with code 2</dt>
+          <dd>The profile itself failed to load, a TOML syntax error or a bad path. The tool prints <code>profile error: ...</code> to stderr, never a raw traceback. Fix the file named after <code>--profile</code> and rerun.</dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-brand rise">
+        <svg class="sigil" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="12" cy="12" r="10" stroke="var(--gold-deep)" stroke-width="1" opacity=".5"/>
+          <ellipse cx="12" cy="12" rx="10" ry="4" stroke="var(--gold-deep)" stroke-width="1" opacity=".5"/>
+          <circle cx="12" cy="12" r="2.3" fill="var(--gold)"/>
+        </svg>
+        <b>ESS Orrery</b>
+      </div>
+      <nav class="foot-nav rise" aria-label="Footer">
+        <a href="/features">Reconciler</a>
+        <a href="/compare">Compare</a>
+        <a href="/pricing">Pricing</a>
+        <a href="/docs">Docs</a>
+        <a href="/get-started">Get started</a>
+        <a href="/security">Security</a>
+        <a href="/terms">Terms</a>
+        <a href="/privacy">Privacy</a>
+      </nav>
+    </div>
+    <div class="foot-meta rise">Open core, AGPL-3.0-or-later. Evening Star Productions.</div>
+  </div>
+</footer>
+
+<div class="istl">In service to Life</div>
+
+<script>
+(function(){
+  "use strict";
+  var reduce = window.matchMedia("(prefers-reduced-motion:reduce)").matches;
+
+  // ---- theme toggle (same contract as index.html) ----
+  var root = document.documentElement, btn = document.getElementById("themeBtn");
+  function currentDark(){
+    var t = root.getAttribute("data-theme");
+    if(t) return t==="dark";
+    return window.matchMedia("(prefers-color-scheme:dark)").matches;
+  }
+  function syncLabel(){ btn.textContent = currentDark() ? "Light" : "Dark"; }
+  btn.addEventListener("click", function(){
+    root.setAttribute("data-theme", currentDark() ? "light" : "dark");
+    syncLabel();
+  });
+  syncLabel();
+  window.matchMedia("(prefers-color-scheme:dark)").addEventListener("change", syncLabel);
+
+  // ---- starfield (identical behavior to index.html, decorative, aria-hidden) ----
+  (function(){
+    var c = document.getElementById("stars");
+    if(!c || !c.getContext) return;
+    var x = c.getContext("2d"), stars=[], W,H,dpr;
+    function size(){
+      dpr = Math.min(window.devicePixelRatio||1, 2);
+      W = c.width = Math.floor(innerWidth*dpr); H = c.height = Math.floor(innerHeight*dpr);
+      c.style.width=innerWidth+"px"; c.style.height=innerHeight+"px";
+      stars = [];
+      var n = Math.min(160, Math.floor(innerWidth*innerHeight/11000));
+      for(var i=0;i<n;i++) stars.push({x:Math.random()*W,y:Math.random()*H,r:(Math.random()*1.1+.2)*dpr,a:Math.random()*.5+.15,tw:Math.random()*2*Math.PI});
+    }
+    function draw(t){
+      x.clearRect(0,0,W,H);
+      var dark = currentDark();
+      for(var i=0;i<stars.length;i++){
+        var st=stars[i], a = st.a*(dark?1:.5)*(reduce?1:(.6+.4*Math.sin(st.tw + t/1400)));
+        x.beginPath(); x.arc(st.x,st.y,st.r,0,6.283);
+        x.globalAlpha = a; x.fillStyle = "rgba("+(dark?"233,237,246":"140,120,80")+","+a.toFixed(3)+")";
+        x.fill();
+      }
+      x.globalAlpha=1;
+      if(!reduce) requestAnimationFrame(draw);
+    }
+    size(); addEventListener("resize", size);
+    if(reduce){ draw(0); } else { requestAnimationFrame(draw); }
+  })();
+
+  // ---- scroll reveals ----
+  if(!reduce && "IntersectionObserver" in window){
+    var io=new IntersectionObserver(function(es){ es.forEach(function(en){ if(en.isIntersecting){ en.target.classList.add("in"); io.unobserve(en.target); } }); },{threshold:.1});
+    document.querySelectorAll(".rise").forEach(function(el){ io.observe(el); });
+  } else {
+    document.querySelectorAll(".rise").forEach(function(el){ el.classList.add("in"); });
+  }
+
+  // ---- accessible copy-to-clipboard, hero chip ----
+  var heroBtn = document.getElementById("copyHero");
+  if(heroBtn){
+    heroBtn.addEventListener("click", function(){
+      var text = "pip install ess-orrery && ess-orrery doctor";
+      var done = function(){ var o=heroBtn.textContent; heroBtn.textContent="Copied"; setTimeout(function(){ heroBtn.textContent=o; }, 1400); };
+      if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(done, done); }
+      else { done(); }
+    });
+  }
+
+  // ---- accessible copy-to-clipboard for command blocks ----
+  document.querySelectorAll(".copybtn").forEach(function(b){
+    var original = b.textContent;
+    b.addEventListener("click", function(){
+      var text = b.getAttribute("data-copy") || "";
+      function done(ok){
+        b.textContent = ok ? "Copied" : "Copy failed";
+        setTimeout(function(){ b.textContent = original; }, 1600);
+      }
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).then(function(){ done(true); }, function(){ done(false); });
+      } else {
+        try{
+          var ta=document.createElement("textarea");
+          ta.value=text; ta.style.position="fixed"; ta.style.opacity="0";
+          document.body.appendChild(ta); ta.focus(); ta.select();
+          var ok=document.execCommand("copy");
+          document.body.removeChild(ta);
+          done(ok);
+        }catch(e){ done(false); }
+      }
+    });
+  });
+})();
+</script>
+</body>
+</html>

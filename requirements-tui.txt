@@ -1,0 +1,3 @@
+# Optional: only needed for the themed terminal deck (orrery.tui).
+# The engines (orrery.reconciler, orrery.context) are stdlib-only and need none of this.
+textual>=8,<9

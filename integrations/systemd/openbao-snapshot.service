@@ -1,0 +1,12 @@
+# Nightly OpenBao raft snapshot. Was a cron line; a cron failure is invisible to
+# `systemctl --failed`, which is why this failed every night for ten days (2026-08-15..24)
+# with nobody knowing. As a unit, a failure is visible in the failed-unit list, in the
+# post-reboot check, and to unit-failure alerting.
+[Unit]
+Description=Nightly OpenBao raft snapshot (local + off-box)
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/root/openbao-snapshot.sh

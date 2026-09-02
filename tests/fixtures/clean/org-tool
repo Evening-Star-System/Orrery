@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# fixture: an ACCT assoc-array encoding of the org map (host/account)
+declare -A ACCT=( [acme]=codeberg.org/acme \
+                  [globex]=github.com/Globex-Inc [initech]=github.com/Globex-Inc \
+                  [umbrella]=github.com/umbrella )

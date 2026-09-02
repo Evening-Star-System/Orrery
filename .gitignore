@@ -1,0 +1,77 @@
+# ─── Append these lines to your project's existing .gitignore ───
+# Prevents session artifacts, signing keys, and local config from leaking into the repo.
+
+# Session and planning artifacts (never commit these)
+# Ignore all hidden files and folders (dotfiles/dotdirs) not explicitly tracked
+.*
+# ... but a blanket .* also swallows the repo plumbing, including .gitignore ITSELF, which means the
+# ignore rules never reach a fresh clone, and .github, which means CI workflows can never be
+# committed. Re-include the files that are genuinely part of the project. Found 2026-07-22.
+!.gitignore
+!.gitattributes
+!.editorconfig
+!.github/
+# Local tooling docs and working notes (suffix convention)
+*.dev
+openspec/
+plan.md
+scratch.md
+notes.md
+*.session
+*.tmp
+.env
+.env*
+*.env
+
+# Keystores and signing keys (NEVER commit)
+*.jks
+*.keystore
+*.p12
+*.pem
+key.properties
+keystore.properties
+android/key.properties
+
+# Local override files
+local.properties
+android/local.properties
+*.local
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Build outputs
+build/
+dist/
+
+# Python artifacts (Python/GTK4 and other Python projects)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+.venv/
+*.egg-info/
+.pytest_cache/
+
+# Operator-specific: analysis doc + real per-install profiles stay local (not published).
+# Ignore every profile except the published example (do not name a real box here).
+docs/MANIFEST.md
+profiles/*.toml
+!profiles/example.toml
+
+# Internal-only, not part of the public open-core surface (kept locally, never published)
+AGENTS.md
+PROJECT.md
+TASKS.md
+docs/PLAN.md
+docs/THREAT-MODEL.md
+docs/secret-rotation-comparison.md
+docs/DECISION-one-engine.md
+docs/DECISION-agent-workspace-primitives.md

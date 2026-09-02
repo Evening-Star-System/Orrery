@@ -1,0 +1,30 @@
+# Prometheus alerting rules for Orrery. Load via rule_files in prometheus.yml.
+groups:
+  - name: orrery
+    rules:
+      - alert: OrreryDrift
+        expr: orrery_drift_total > 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Fleet drift on {{ $labels.box }}"
+          description: "{{ $value }} reconciler finding(s) at drift or worse. The box no longer matches its declared desired state."
+
+      - alert: OrreryStale
+        expr: time() - orrery_last_run_timestamp_seconds > 3600
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Orrery reconcile is stale on {{ $labels.box }}"
+          description: "No fresh reconcile in over an hour. The conformance signal cannot be trusted."
+
+      - alert: OrreryDown
+        expr: orrery_up == 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Orrery reconcile failed on {{ $labels.box }}"
+          description: "The reconcile could not run (for example a bad profile), so drift is currently invisible."

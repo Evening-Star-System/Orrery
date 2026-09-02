@@ -1,0 +1,699 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Features and the Reconciler's Six Checks | ESS Orrery</title>
+<meta name="description" content="ESS Orrery's six reconciler checks and the tenets they enforce, plus an honest build status: what ships today, what is in progress, and what is not built.">
+<meta property="og:title" content="Features and the Reconciler's Six Checks | ESS Orrery">
+<meta property="og:description" content="ESS Orrery's six reconciler checks and the tenets they enforce, plus an honest build status: what ships today, what is in progress, and what is not built.">
+<meta property="og:type" content="website">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<meta property="og:site_name" content="ESS Orrery">
+<meta property="og:url" content="https://orrery.eveningstar.app/features">
+<meta property="og:image" content="https://orrery.eveningstar.app/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://orrery.eveningstar.app/og.png">
+<meta name="twitter:title" content="Features and the Reconciler's Six Checks | ESS Orrery">
+<meta name="twitter:description" content="ESS Orrery's six reconciler checks and the tenets they enforce, plus an honest build status: what ships today, what is in progress, and what is not built.">
+<link rel="canonical" href="https://orrery.eveningstar.app/features">
+<style>
+  :root{
+    /* dark, verified WCAG AA (see DESIGN.md) */
+    --ground:#06080f; --ground-2:#0a0e1a; --panel:#0d1322; --card:#0f1728; --panel-2:#131d33;
+    --ink:#eef2fb; --muted:#a7b2ca; --faint:#7d89a4;
+    --gold:#f4c66b; --gold-deep:#e3b055; --silver:#cbd5ea;
+    --good:#6fe0a6; --drift:#f2b45a;
+    --line:rgba(150,170,210,.12); --line-2:rgba(150,170,210,.06); --line-lit:rgba(230,238,255,.10);
+    --orbit:rgba(155,175,215,.20);
+    --glow:rgba(244,198,107,.50);
+    --btn-bg:var(--gold); --btn-ink:#1a1206;
+    --shadow:0 40px 120px -30px rgba(0,0,0,.75);
+    --mono:ui-monospace,"SF Mono","JetBrains Mono","Cascadia Code",Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    --maxw:1200px;
+    color-scheme:dark;
+  }
+  @media (prefers-color-scheme:light){
+    :root{
+      --ground:#f3efe6; --ground-2:#efe9dd; --panel:#f7f2e8; --card:#faf6ee; --panel-2:#ece5d6;
+      --ink:#1f1c15; --muted:#5f5849; --faint:#6b6350;
+      --gold:#a9721f; --gold-deep:#8a5c17; --silver:#5c5443;
+      --good:#2f7d54; --drift:#8a5f12;
+      --line:rgba(40,34,22,.14); --line-2:rgba(40,34,22,.07); --line-lit:rgba(255,255,255,.65);
+      --orbit:rgba(60,50,30,.24);
+      --glow:rgba(169,114,31,.26);
+      --btn-bg:#6e4712; --btn-ink:#ffffff;
+      --shadow:0 30px 80px -30px rgba(60,45,20,.35);
+      color-scheme:light;
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#06080f; --ground-2:#0a0e1a; --panel:#0d1322; --card:#0f1728; --panel-2:#131d33;
+    --ink:#eef2fb; --muted:#a7b2ca; --faint:#7d89a4;
+    --gold:#f4c66b; --gold-deep:#e3b055; --silver:#cbd5ea;
+    --good:#6fe0a6; --drift:#f2b45a;
+    --line:rgba(150,170,210,.12); --line-2:rgba(150,170,210,.06); --line-lit:rgba(230,238,255,.10);
+    --orbit:rgba(155,175,215,.20); --glow:rgba(244,198,107,.50);
+    --btn-bg:var(--gold); --btn-ink:#1a1206; --shadow:0 40px 120px -30px rgba(0,0,0,.75);
+    color-scheme:dark;
+  }
+  :root[data-theme="light"]{
+    --ground:#f3efe6; --ground-2:#efe9dd; --panel:#f7f2e8; --card:#faf6ee; --panel-2:#ece5d6;
+    --ink:#1f1c15; --muted:#5f5849; --faint:#6b6350;
+    --gold:#a9721f; --gold-deep:#8a5c17; --silver:#5c5443;
+    --good:#2f7d54; --drift:#8a5f12;
+    --line:rgba(40,34,22,.14); --line-2:rgba(40,34,22,.07); --line-lit:rgba(255,255,255,.65);
+    --orbit:rgba(60,50,30,.24); --glow:rgba(169,114,31,.26);
+    --btn-bg:#6e4712; --btn-ink:#ffffff; --shadow:0 30px 80px -30px rgba(60,45,20,.35);
+    color-scheme:light;
+  }
+
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){ html{scroll-behavior:auto} }
+  body{
+    margin:0; background:var(--ground); color:var(--ink);
+    font-family:var(--sans); line-height:1.6; font-size:17px;
+    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+    overflow-x:hidden;
+  }
+  ::selection{background:var(--gold); color:#1a1206}
+  a{color:inherit}
+  img,canvas{max-width:100%}
+  .wrap{max-width:var(--maxw); margin:0 auto; padding:0 28px}
+  .mono{font-family:var(--mono)}
+  .tnum{font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1}
+
+  .eyebrow{
+    font-family:var(--mono); font-size:12px; letter-spacing:.24em;
+    text-transform:uppercase; color:var(--gold-deep); margin:0;
+  }
+  h1,h2,h3,h4{margin:0; text-wrap:balance; font-family:var(--sans); font-weight:640}
+  h1{font-weight:680}
+
+  /* skip link */
+  .skip{
+    position:absolute; left:16px; top:-60px; z-index:200;
+    background:var(--gold); color:#1a1206; font-family:var(--mono); font-size:13px;
+    font-weight:600; text-decoration:none; padding:10px 16px; border-radius:3px; transition:top .15s;
+  }
+  .skip:focus{top:16px}
+
+  /* backdrop */
+  .stars{position:fixed; inset:0; z-index:0; pointer-events:none; opacity:.9}
+  .aura{
+    position:fixed; z-index:0; pointer-events:none; left:50%; top:-8%;
+    width:min(1200px,120vw); aspect-ratio:1/1; transform:translateX(-50%);
+    background:radial-gradient(closest-side, var(--glow), transparent 70%);
+    opacity:.55; filter:blur(10px);
+  }
+
+  /* top bar */
+  header{
+    position:sticky; top:0; z-index:40;
+    backdrop-filter:saturate(140%) blur(12px);
+    background:color-mix(in srgb, var(--ground) 74%, transparent);
+    border-bottom:1px solid var(--line);
+  }
+  .bar{display:flex; align-items:center; justify-content:space-between; height:64px}
+  .brand{display:flex; align-items:center; gap:11px; font-size:18px; letter-spacing:.01em; text-decoration:none}
+  .brand b{font-weight:670} .brand span{font-weight:420; color:var(--muted)}
+  .sigil{width:24px; height:24px; display:block; filter:drop-shadow(0 0 6px var(--glow))}
+  nav.primary{display:flex; align-items:center; gap:8px}
+  nav.primary .navlink{font-family:var(--mono); font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); text-decoration:none; padding:9px 12px; border-radius:4px; transition:color .18s, background .18s}
+  nav.primary .navlink:hover{color:var(--ink); background:color-mix(in srgb, var(--ink) 7%, transparent)}
+  nav.primary a[aria-current="page"]{color:var(--gold-deep)}
+  .navcta{font-family:var(--mono); font-size:12px; letter-spacing:.06em; text-transform:uppercase; text-decoration:none;
+    background:var(--btn-bg); color:var(--btn-ink); font-weight:640; padding:9px 15px; border-radius:5px; margin-left:6px;
+    box-shadow:0 0 0 1px color-mix(in srgb, var(--gold) 40%, transparent), 0 8px 22px -10px var(--glow); transition:transform .15s, box-shadow .2s}
+  .navcta:hover{transform:translateY(-1px); box-shadow:0 0 0 1px var(--gold), 0 12px 28px -10px var(--glow)}
+  .toggle{
+    font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--muted); background:transparent; border:1px solid var(--line);
+    border-radius:5px; padding:8px 11px; cursor:pointer; transition:.18s;
+  }
+  .toggle:hover{border-color:var(--gold-deep); color:var(--ink)}
+  .navtoggle{
+    display:none; align-items:center; justify-content:center;
+    width:40px; height:40px; padding:0; margin-left:8px; flex:0 0 auto;
+    background:transparent; border:1px solid var(--line); border-radius:6px;
+    cursor:pointer; transition:border-color .18s;
+  }
+  .navtoggle:hover{ border-color:var(--gold-deep) }
+  .navtoggle-bars{ position:relative; display:block; width:18px; height:2px; border-radius:2px; background:var(--ink) }
+  .navtoggle-bars::before, .navtoggle-bars::after{ content:""; position:absolute; left:0; width:18px; height:2px; border-radius:2px; background:var(--ink); transition:transform .2s ease, top .2s ease, opacity .2s ease }
+  .navtoggle-bars::before{ top:-6px }
+  .navtoggle-bars::after{ top:6px }
+  .navtoggle[aria-expanded="true"] .navtoggle-bars{ background:transparent }
+  .navtoggle[aria-expanded="true"] .navtoggle-bars::before{ top:0; transform:rotate(45deg) }
+  .navtoggle[aria-expanded="true"] .navtoggle-bars::after{ top:0; transform:rotate(-45deg) }
+  @media (max-width:900px){
+    .navtoggle{ display:inline-flex }
+    nav.primary{
+      display:flex; flex-direction:column; align-items:stretch; gap:0;
+      position:absolute; left:0; right:0; top:100%; z-index:39;
+      background:var(--ground); border-bottom:1px solid var(--line);
+      box-shadow:var(--shadow); padding:8px 0;
+      opacity:0; visibility:hidden; transform:translateY(-6px); pointer-events:none;
+      transition:opacity .18s ease, transform .18s ease, visibility 0s linear .18s;
+    }
+    nav.primary.open{
+      opacity:1; visibility:visible; transform:translateY(0); pointer-events:auto;
+      transition:opacity .18s ease, transform .18s ease;
+    }
+    nav.primary .navlink{
+      display:flex; align-items:center; width:100%; box-sizing:border-box;
+      min-height:44px; padding:12px 28px; font-size:13px; border-radius:0;
+    }
+    nav.primary .toggle{ margin:10px 28px; align-self:flex-start; min-height:44px }
+    nav.primary .navcta{ margin:10px 28px; justify-content:center; text-align:center; min-height:44px; box-sizing:border-box }
+  }
+  @media (prefers-reduced-motion:reduce){
+    nav.primary{ transition:none }
+    nav.primary.open{ transition:none }
+    .navtoggle-bars::before, .navtoggle-bars::after{ transition:none }
+  }
+
+  /* shared panel look: hairline + light-catching top edge */
+  .panel{position:relative; background:var(--card); border:1px solid var(--line); border-radius:12px;
+    box-shadow:inset 0 1px 0 var(--line-lit), var(--shadow)}
+
+  /* ---- cta / cmd shared components ---- */
+  .cta-row{display:flex; gap:12px; margin-top:26px; flex-wrap:wrap; align-items:center}
+  .btn{font-family:var(--mono); font-size:13px; letter-spacing:.05em; text-transform:uppercase;
+    text-decoration:none; padding:13px 20px; border-radius:7px; transition:transform .15s, box-shadow .2s, border-color .2s; display:inline-flex; align-items:center; gap:8px}
+  .btn-p{background:var(--btn-bg); color:var(--btn-ink); font-weight:640;
+    box-shadow:0 0 0 1px color-mix(in srgb, var(--gold) 45%, transparent), 0 14px 34px -14px var(--glow)}
+  .btn-p:hover{transform:translateY(-1px); box-shadow:0 0 0 1px var(--gold), 0 18px 40px -14px var(--glow)}
+  .btn-s{color:var(--ink); border:1px solid var(--line); box-shadow:inset 0 1px 0 var(--line-lit)}
+  .btn-s:hover{border-color:var(--gold-deep); transform:translateY(-1px)}
+  .cmd{margin-top:22px; display:flex; align-items:center; gap:10px; font-family:var(--mono); font-size:13.5px;
+    background:var(--ground-2); border:1px solid var(--line); border-radius:8px; padding:11px 12px; max-width:min(100%,420px);
+    box-shadow:inset 0 1px 0 var(--line-lit)}
+  .cmd .p{color:var(--gold-deep)} .cmd code{color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .cmd .cp{margin-left:auto; flex:0 0 auto; font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase;
+    background:transparent; color:var(--muted); border:1px solid var(--line); border-radius:5px; padding:6px 9px; cursor:pointer; transition:.15s}
+  .cmd .cp:hover{border-color:var(--gold-deep); color:var(--ink)}
+
+  /* ---- sections ---- */
+  section{position:relative; z-index:1}
+  .band{border-top:1px solid var(--line); padding:clamp(72px,9vw,128px) 0}
+  .band.plain{border-top:0}
+  .sec-head{max-width:64ch}
+  .sec-head .idx{font-family:var(--mono); font-size:12px; color:var(--gold-deep); letter-spacing:.2em}
+  .sec-head h2{font-size:clamp(30px,3.9vw,48px); letter-spacing:-.024em; line-height:1.05; margin:14px 0 0}
+  .sec-sub{color:var(--muted); max-width:60ch; margin:18px 0 0; font-size:clamp(16px,1.3vw,18px)}
+  .sec-top{margin-bottom:46px}
+
+  /* ---- footer ---- */
+  footer{border-top:1px solid var(--line); padding:56px 0 30px; position:relative; z-index:1}
+  .foot-grid{display:flex; justify-content:space-between; gap:32px; flex-wrap:wrap; align-items:flex-start}
+  .foot-brand{display:flex; align-items:center; gap:10px; font-size:16px}
+  .foot-brand b{font-weight:660}
+  .foot-nav{display:flex; flex-wrap:wrap; gap:8px 22px; font-family:var(--mono); font-size:12px; letter-spacing:.04em}
+  .foot-nav a{color:var(--muted); text-decoration:none} .foot-nav a:hover{color:var(--gold-deep)}
+  .foot-meta{margin-top:26px; font-family:var(--mono); font-size:11.5px; color:var(--faint); letter-spacing:.03em}
+  /* closing seal: understated, present, never competes for attention (see DESIGN.md) */
+  .istl{position:relative; z-index:1; text-align:center; font-family:var(--serif); font-style:italic;
+    font-size:12.5px; letter-spacing:.05em; color:var(--gold-deep); padding:8px 0 42px}
+
+  /* reveal + focus */
+  .rise{opacity:0; transform:translateY(18px); transition:opacity .7s cubic-bezier(.2,.7,.2,1), transform .7s cubic-bezier(.2,.7,.2,1)}
+  .rise.in{opacity:1; transform:none}
+  :focus-visible{outline:2px solid var(--gold); outline-offset:3px; border-radius:4px}
+  @media (prefers-reduced-motion:reduce){ .rise{opacity:1; transform:none; transition:none} }
+
+  /* ---- page hero (features/compare: a lighter hero than the landing split hero) ---- */
+  .page-hero{position:relative; z-index:1; padding:clamp(48px,7vw,92px) 0 clamp(40px,6vw,56px); max-width:74ch}
+  .page-hero h1{font-size:clamp(38px,5.6vw,64px); line-height:1.05; letter-spacing:-.03em; margin:18px 0 0; font-weight:700}
+  .page-hero h1 .thin{color:var(--muted); font-weight:600}
+  .page-hero .lede{margin:18px 0 0; font-size:clamp(16px,1.4vw,19px); line-height:1.58; color:var(--muted); max-width:70ch}
+
+  /* ---- card grid: the shared building block for both pages' content sections ---- */
+  .grid{display:grid; gap:14px}
+  .grid.c3{grid-template-columns:repeat(3,1fr)}
+  .grid.c4{grid-template-columns:repeat(4,1fr)}
+  @media (max-width:960px){ .grid.c4{grid-template-columns:repeat(2,1fr)} }
+  @media (max-width:820px){ .grid.c3{grid-template-columns:1fr} }
+  @media (max-width:560px){ .grid.c4{grid-template-columns:1fr} }
+
+  .fcard{position:relative; background:var(--card); border:1px solid var(--line); border-radius:12px;
+    padding:24px 22px; box-shadow:inset 0 1px 0 var(--line-lit); transition:transform .16s, border-color .16s;
+    display:flex; flex-direction:column; gap:10px}
+  .fcard:hover{transform:translateY(-2px); border-color:var(--gold-deep)}
+  .fcard .fk{font-family:var(--mono); font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--gold-deep)}
+  .fcard h3{font-size:19px; line-height:1.22; letter-spacing:-.01em; font-weight:640}
+  .fcard p{margin:0; color:var(--muted); font-size:14px; line-height:1.58; flex:1}
+
+  .status-line{display:inline-flex; align-items:center; gap:7px; font-family:var(--mono); font-size:11px;
+    letter-spacing:.08em; text-transform:uppercase; color:var(--ink); margin-top:auto}
+  .status-line i{width:7px; height:7px; border-radius:50%; background:var(--good); box-shadow:0 0 7px var(--good); flex:0 0 auto}
+
+  /* ---- honest build status: kanban columns, text label on every card, never color alone ---- */
+  .kanban{display:grid; grid-template-columns:repeat(3,1fr); gap:16px; align-items:start}
+  .kcol{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:16px 15px; box-shadow:inset 0 1px 0 var(--line-lit)}
+  .khead{display:flex; align-items:center; gap:9px; font-family:var(--mono); font-size:11.5px; letter-spacing:.12em;
+    text-transform:uppercase; color:var(--ink); padding:2px 3px 13px; border-bottom:1px solid var(--line-2); margin-bottom:13px}
+  .khead i{width:8px; height:8px; border-radius:50%; flex:0 0 auto; background:var(--good); box-shadow:0 0 7px var(--good)}
+  .khead.now i{background:var(--gold); box-shadow:0 0 7px var(--gold)}
+  .khead.bench i{background:var(--line); box-shadow:none}
+  .khead .kn{margin-left:auto; color:var(--muted); font-variant-numeric:tabular-nums}
+  .kcard{background:var(--card); border:1px solid var(--line); border-radius:9px; padding:13px 14px; margin-bottom:10px; box-shadow:inset 0 1px 0 var(--line-lit)}
+  .kcard:last-child{margin-bottom:0}
+  .kcard.bench{border-style:dashed}
+  .kcard .kt{display:flex; align-items:baseline; justify-content:space-between; gap:8px}
+  .kcard .kt span:first-child{font-family:var(--mono); font-size:10.5px; letter-spacing:.05em; color:var(--gold-deep)}
+  .kcard .kstate{font-family:var(--mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted)}
+  .kcard.bench .kstate{color:var(--ink)}
+  .kcard h3{font-size:16.5px; margin:6px 0 5px; font-weight:640; letter-spacing:-.006em}
+  .kcard p{margin:0; font-size:13px; color:var(--muted); line-height:1.55}
+  @media (max-width:820px){ .kanban{grid-template-columns:1fr} }
+
+  /* ---- open-core: two tiers ---- */
+  .tiers{display:grid; grid-template-columns:1fr 1fr; gap:16px}
+  .tier{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:30px 28px; box-shadow:inset 0 1px 0 var(--line-lit)}
+  .tier .tt{font-family:var(--mono); font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--gold-deep)}
+  .tier h3{font-size:23px; margin:12px 0 8px; font-weight:660; letter-spacing:-.01em}
+  .tier .lic{font-family:var(--mono); font-size:12.5px; color:var(--gold-deep); margin-bottom:6px}
+  .tier p{color:var(--muted); font-size:14.5px; margin:8px 0 0; line-height:1.58}
+  @media (max-width:820px){ .tiers{grid-template-columns:1fr} }
+  .model-note{margin-top:20px; color:var(--muted); font-size:14px; max-width:76ch; line-height:1.6}
+  .model-note a{color:var(--gold-deep); text-decoration-color:var(--line)}
+  .model-note a:hover{color:var(--gold)}
+</style>
+<noscript><style>.rise{opacity:1 !important; transform:none !important}</style></noscript>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "SoftwareApplication",
+      "@id": "https://orrery.eveningstar.app/features#software",
+      "name": "ESS Orrery",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Linux",
+      "description": "ESS Orrery's six reconciler checks and the tenets they enforce, plus an honest build status: what ships today, what is in progress, and what is not built.",
+      "license": "https://www.gnu.org/licenses/agpl-3.0.html",
+      "url": "https://orrery.eveningstar.app/",
+      "offers": [
+        {
+          "@type": "Offer",
+          "name": "Core",
+          "price": "0",
+          "priceCurrency": "USD",
+          "availability": "https://schema.org/InStock",
+          "description": "Self-hosted, AGPL-3.0-or-later, unlimited boxes, one operator. Free forever, not a trial."
+        },
+        {
+          "@type": "Offer",
+          "name": "Operator",
+          "price": "49",
+          "priceCurrency": "USD",
+          "availability": "https://schema.org/PreOrder",
+          "description": "Hosted control plane and governed autonomy, 1 operator seat, up to 10 boxes. Early access, billed monthly."
+        },
+        {
+          "@type": "Offer",
+          "name": "Team",
+          "price": "199",
+          "priceCurrency": "USD",
+          "availability": "https://schema.org/PreOrder",
+          "description": "5 operator seats, up to 50 boxes, approvals workflow, full audit log, SSO. Early access, billed monthly."
+        },
+        {
+          "@type": "Offer",
+          "name": "Enterprise",
+          "price": "999",
+          "priceCurrency": "USD",
+          "availability": "https://schema.org/PreOrder",
+          "description": "Unlimited operator seats and boxes, linked secret rotation, audited managed plane. From $999/mo, early access."
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "ESS Orrery",
+          "item": "https://orrery.eveningstar.app/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Features",
+          "item": "https://orrery.eveningstar.app/features"
+        }
+      ]
+    }
+  ]
+}
+</script>
+  <script defer src="https://analytics.ninthstar.org/getinfo" data-website-id="0bd58f0a-2425-4d69-ad47-bf66c762359e"></script>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<div class="aura" aria-hidden="true"></div>
+<canvas class="stars" id="stars" aria-hidden="true"></canvas>
+
+<header>
+  <div class="wrap bar">
+    <a class="brand" href="/" aria-label="ESS Orrery, home">
+      <svg class="sigil" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="12" cy="12" r="10" stroke="var(--gold-deep)" stroke-width="1" opacity=".5"/>
+        <ellipse cx="12" cy="12" rx="10" ry="4" stroke="var(--gold-deep)" stroke-width="1" opacity=".5"/>
+        <circle cx="12" cy="12" r="2.3" fill="var(--gold)"/>
+        <circle cx="22" cy="12" r="1.4" fill="var(--silver)"/>
+      </svg>
+      <b>ESS Orrery</b>
+    </a>
+    <button class="navtoggle" id="navToggle" type="button" aria-expanded="false" aria-controls="primaryNav" aria-label="Open menu">
+      <span class="navtoggle-bars" aria-hidden="true"></span>
+    </button>
+    <nav class="primary" id="primaryNav" aria-label="Primary">
+      <a class="navlink" href="/features" aria-current="page">Reconciler</a>
+      <a class="navlink" href="/compare">Compare</a>
+      <a class="navlink" href="/pricing">Pricing</a>
+      <a class="navlink" href="/docs">Docs</a>
+      <button class="toggle" id="themeBtn" aria-label="Toggle light and dark theme">Light</button>
+      <a class="navcta" href="/get-started">Get started</a>
+    </nav>
+  </div>
+</header>
+<script>
+(function(){
+  "use strict";
+  var toggle = document.getElementById("navToggle"), nav = document.getElementById("primaryNav");
+  if(!toggle || !nav) return;
+  function closeNav(){
+    nav.classList.remove("open");
+    toggle.setAttribute("aria-expanded","false");
+  }
+  function openNav(){
+    nav.classList.add("open");
+    toggle.setAttribute("aria-expanded","true");
+  }
+  toggle.addEventListener("click", function(){
+    if(nav.classList.contains("open")){ closeNav(); } else { openNav(); }
+  });
+  nav.addEventListener("click", function(e){
+    if(e.target.closest("a")){ closeNav(); }
+  });
+  document.addEventListener("keydown", function(e){
+    if(e.key === "Escape" && nav.classList.contains("open")){ closeNav(); toggle.focus(); }
+  });
+  document.addEventListener("click", function(e){
+    if(nav.classList.contains("open") && !nav.contains(e.target) && !toggle.contains(e.target)){ closeNav(); }
+  });
+  window.matchMedia("(min-width:901px)").addEventListener("change", function(mq){
+    if(mq.matches){ closeNav(); }
+  });
+})();
+</script>
+
+<main id="main" tabindex="-1">
+
+  <section class="wrap page-hero">
+    <span class="eyebrow rise">Why Orrery</span>
+    <h1 class="rise">What no single tool<br><span class="thin">ships together.</span></h1>
+    <p class="lede rise">Conformance for a plain VPS. A secret-to-consumer graph. Governed autonomy enforced in code. An install that proves itself. Four things a solo or small operator needs together, that no single existing tool ships as one.</p>
+    <div class="cmd rise">
+      <span class="p" aria-hidden="true">$</span>
+      <code>pip install ess-orrery &amp;&amp; ess-orrery doctor</code>
+      <button class="cp" id="copyBtn" aria-label="Copy install command">Copy</button>
+    </div>
+    <div class="cta-row rise">
+      <a class="btn btn-p" href="#checks">See the six checks</a>
+      <a class="btn btn-s" href="#status">Read the honest status</a>
+    </div>
+  </section>
+
+  <section class="band" id="why">
+    <div class="wrap">
+      <div class="sec-head sec-top rise">
+        <span class="idx">I</span>
+        <h2>Between your IaC and your monitoring.</h2>
+        <p class="sec-sub">Infrastructure-as-code (Ansible, Terraform, Puppet) applies desired state. Monitoring (Prometheus, Datadog) watches whether things are up. Orrery sits in between: it continuously checks that a box still matches the desired state you declared, and surfaces the drift neither side watches for. Conformance tools assume a cluster someone else already manages. Secrets managers assume you already run one. Agent-governance products assume a platform team. Orrery starts from a plain box a solo operator can actually run, and fills the seam between those categories.</p>
+      </div>
+      <div class="grid c4 rise">
+        <div class="fcard">
+          <span class="fk">01</span>
+          <h3>A plain VPS, not a cluster</h3>
+          <p>The reconciler runs read-only over plain ssh into any Linux box: a Hetzner VPS, a DigitalOcean droplet, a Raspberry Pi. No control plane assumed on the far end.</p>
+        </div>
+        <div class="fcard">
+          <span class="fk">02</span>
+          <h3>A secret graph, by identity only</h3>
+          <p>Every secret mapped to the consumers that reference it, confirmed without ever reading a value. That graph is what makes rotation safe later, and it is not something Infisical or Doppler ships.</p>
+        </div>
+        <div class="fcard">
+          <span class="fk">03</span>
+          <h3>Governed autonomy, in code</h3>
+          <p>Standing rules for an AI operator are only real if they live below the model. The checks refuse unsafe input structurally, they do not ask a model to behave.</p>
+        </div>
+        <div class="fcard">
+          <span class="fk">04</span>
+          <h3>An install that proves itself</h3>
+          <p>ess-orrery doctor verifies the installation actually stands, then the reconciler keeps watching afterward, so nothing is trusted blind a month later.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="checks">
+    <div class="wrap">
+      <div class="sec-head sec-top rise">
+        <span class="idx">II</span>
+        <h2>Six checks, and they are the whole spine.</h2>
+        <p class="sec-sub">The reconciler holds each fact as a declaration plus a probe, and runs the probe continuously: a thing is not "declared", it is declared and its probe passes. Findings carry a severity from OK through INFO and WARN up to DRIFT, the core signal, disagreement between declared and observed, and FAIL, a broken invariant. All six ship today, read-only: they measure and report, they never change a box.</p>
+      </div>
+      <div class="grid c3 rise">
+        <div class="fcard">
+          <span class="fk">org-map</span>
+          <h3>One source of truth</h3>
+          <p>A bucket-to-account table is copied, in three different encodings, into the tools that consume it: a Python dict, a bash associative array, a bash case function. This check reads the truth and each consumer's own live encoding and reports exactly where they disagree.</p>
+          <span class="status-line"><i aria-hidden="true"></i>Operational</span>
+        </div>
+        <div class="fcard">
+          <span class="fk">fleet-reach</span>
+          <h3>The reach matrix, live</h3>
+          <p>The profile declares which edges from this box should be open and which should stay closed. Actual ssh reach is probed both ways: a depended-on link that is down is a failure; a deliberately closed link that has reopened is drift.</p>
+          <span class="status-line"><i aria-hidden="true"></i>Operational</span>
+        </div>
+        <div class="fcard">
+          <span class="fk">secret-edges</span>
+          <h3>The secret graph</h3>
+          <p>Every declared secret is checked by its identity, a vault path or an env var name, never its value, against a fail-closed allowlist before anything is scanned. Confirmed edges pass; a consumer that stopped referencing a secret is drift.</p>
+          <span class="status-line"><i aria-hidden="true"></i>Operational</span>
+        </div>
+        <div class="fcard">
+          <span class="fk">declared-presence</span>
+          <h3>What must exist, does</h3>
+          <p>Required members are confirmed present; a missing one fails the run. A path marked planned-absent, a hardening step not yet taken, stays informational while absent and only warns if it reappears.</p>
+          <span class="status-line"><i aria-hidden="true"></i>Operational</span>
+        </div>
+        <div class="fcard">
+          <span class="fk">floors</span>
+          <h3>Nothing quietly shrinks</h3>
+          <p>A count, files in a directory or lines in a file, is held between a declared floor and ceiling. Dropping below the floor is a real incident; climbing far above it flags the floor itself as stale and due for recalibration.</p>
+          <span class="status-line"><i aria-hidden="true"></i>Operational</span>
+        </div>
+        <div class="fcard">
+          <span class="fk">managed-settings</span>
+          <h3>The guard cannot be moved</h3>
+          <p>Every enforcement file must stay root-owned and no more writable than declared, so the rules that gate an AI operator's actions cannot be quietly loosened from inside. A file marked planned reports informational until it lands.</p>
+          <span class="status-line"><i aria-hidden="true"></i>Operational</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="tenets">
+    <div class="wrap">
+      <div class="sec-head sec-top rise">
+        <span class="idx">III</span>
+        <h2>Three tenets, made concrete.</h2>
+        <p class="sec-sub">A principle is cheap until it shows up as code. Here is where each one actually lives.</p>
+      </div>
+      <div class="grid c3 rise">
+        <div class="fcard">
+          <span class="fk">01 / integrity</span>
+          <h3>It verifies its own install.</h3>
+          <p><span class="mono">ess-orrery doctor</span> is the self-check. The build sequence puts a blank-box install ahead of every later feature, because the install target is the real test, not a description of one.</p>
+        </div>
+        <div class="fcard">
+          <span class="fk">02 / enforcement</span>
+          <h3>Enforced in code, not asked of a model.</h3>
+          <p>fleet-reach refuses to probe a host string that does not look like a safe ssh alias. secret-edges refuses to scan or echo anything that fails its identity allowlist first. The guard is structural, never a prompt asking something to behave.</p>
+        </div>
+        <div class="fcard">
+          <span class="fk">03 / discipline</span>
+          <h3>Measure, do not read.</h3>
+          <p>org-map does not trust that consumers agree with a table, it parses each one's actual live encoding and reports where they diverge. Documentation is the thing under test, including the status below, about Orrery itself.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="status">
+    <div class="wrap">
+      <div class="sec-head sec-top rise">
+        <span class="idx">IV</span>
+        <h2>How it is actually built.</h2>
+        <p class="sec-sub">Measure, do not read applies to Orrery's own claims too. What follows is stated as plainly as a drift finding: what runs today, what is in progress, and what is not built yet. Honest status is not a caveat here, it is the point.</p>
+      </div>
+      <div class="kanban rise">
+        <div class="kcol">
+          <div class="khead"><i aria-hidden="true"></i>Operational today<span class="kn">7</span></div>
+          <div class="kcard"><div class="kt"><span>reconciler</span><span class="kstate">Live</span></div><h3>Desired vs observed</h3><p>Six read-only checks; a fact is declared and its probe passes, continuously.</p></div>
+          <div class="kcard"><div class="kt"><span>spine</span><span class="kstate">Live</span></div><h3>Curated memory, under git</h3><p>Replicated and restore-verified, not a folder of notes hoping to stay in sync.</p></div>
+          <div class="kcard"><div class="kt"><span>guards</span><span class="kstate">Live</span></div><h3>Admission control, below the model</h3><p>Rules gate tool calls and operator actions in code and architecture, never asked of a model.</p></div>
+          <div class="kcard"><div class="kt"><span>deck + cli</span><span class="kstate">Live</span></div><h3>The operator deck</h3><p>A themed terminal deck plus a strong CLI over the same engine.</p></div>
+          <div class="kcard"><div class="kt"><span>install</span><span class="kstate">Live</span></div><h3>Verifies its own install</h3><p><span class="mono">ess-orrery doctor</span> confirms the installation actually stands, cold, on a blank box.</p></div>
+          <div class="kcard"><div class="kt"><span>context</span><span class="kstate">Live</span></div><h3>Per-directory isolation</h3><p>Context resolves per working directory, so one installation cannot bleed into another's identity.</p></div>
+          <div class="kcard"><div class="kt"><span>prometheus</span><span class="kstate">Live</span></div><h3>Metrics for Grafana</h3><p><span class="mono">ess-orrery reconcile --format prometheus</span> emits metrics; a ready-made dashboard ships in <span class="mono">integrations/grafana/</span>.</p></div>
+        </div>
+        <div class="kcol">
+          <div class="khead now"><i aria-hidden="true"></i>In progress<span class="kn">2</span></div>
+          <div class="kcard"><div class="kt"><span>profiles</span><span class="kstate">In progress</span></div><h3>Box enrollment</h3><p>One command to enrol a box with a role; the reach matrix becomes generated, not hand-kept.</p></div>
+          <div class="kcard"><div class="kt"><span>reconciler</span><span class="kstate">In progress</span></div><h3>Continuous fleet watch</h3><p>Report-only reconciliation across the whole fleet, running on its own schedule instead of on demand.</p></div>
+        </div>
+        <div class="kcol">
+          <div class="khead bench"><i aria-hidden="true"></i>Not built yet<span class="kn">3</span></div>
+          <div class="kcard bench"><div class="kt"><span>vault</span><span class="kstate">Not built</span></div><h3>Linked secret rotation</h3><p>Does not exist. It would wrap OpenBao (MPL-2.0) and walk the secret-edges graph to rotate a credential everywhere it is consumed. The graph is real and running today; the fan-out apply and rollback across consumers is not, and will not ship until breakglass recovery is proven first.</p></div>
+          <div class="kcard bench"><div class="kt"><span>hosted</span><span class="kstate">Not built</span></div><h3>Hosted control plane</h3><p>Does not exist yet. The governed-autonomy trust layer and approvals, run for you rather than self-hosted.</p></div>
+          <div class="kcard bench"><div class="kt"><span>gui</span><span class="kstate">Not built</span></div><h3>Graphical fleet view</h3><p>Does not exist yet. Today's operator surface is the CLI and the terminal deck; a screen-based fleet view is a later, separate scope.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="model">
+    <div class="wrap">
+      <div class="sec-head sec-top rise">
+        <span class="idx">V</span>
+        <h2>Open at the core.</h2>
+        <p class="sec-sub">The core holds your secrets and reaches every box, so it is open and auditable: security is not a black box here. The layer that scales and governs is where the business lives.</p>
+      </div>
+      <div class="tiers rise">
+        <div class="tier">
+          <div class="tt">The core</div>
+          <h3>ESS Orrery</h3>
+          <div class="lic">AGPL-3.0-or-later</div>
+          <p>Free to run, study, and modify. Zero runtime dependencies, read-only, identity-free: the reconciler and its six checks, per-directory context isolation, a self-verifying install, the CLI, and the themed terminal deck.</p>
+        </div>
+        <div class="tier">
+          <div class="tt">The commercial layer</div>
+          <h3>Governed autonomy</h3>
+          <div class="lic">Commercial license</div>
+          <p>The trust layer for handing off consequential work safely: enforced standing rules, durable memory, plan-then-approve, a hosted control plane, and the graphical fleet view. Not part of this repository.</p>
+        </div>
+      </div>
+      <p class="model-note rise">A commercial license is available from Evening Star Productions for anyone who cannot meet the AGPL terms (offering a modified version to others over a network under the same license). Full model and licensing detail on the <a href="/pricing">pricing page</a>.</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-brand rise">
+        <svg class="sigil" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="12" cy="12" r="10" stroke="var(--gold-deep)" stroke-width="1" opacity=".5"/>
+          <ellipse cx="12" cy="12" rx="10" ry="4" stroke="var(--gold-deep)" stroke-width="1" opacity=".5"/>
+          <circle cx="12" cy="12" r="2.3" fill="var(--gold)"/>
+        </svg>
+        <b>ESS Orrery</b>
+      </div>
+      <nav class="foot-nav rise" aria-label="Footer">
+        <a href="/features">Reconciler</a>
+        <a href="/compare">Compare</a>
+        <a href="/pricing">Pricing</a>
+        <a href="/docs">Docs</a>
+        <a href="/get-started">Get started</a>
+        <a href="/security">Security</a>
+        <a href="/terms">Terms</a>
+        <a href="/privacy">Privacy</a>
+      </nav>
+    </div>
+    <div class="foot-meta rise">Open core, AGPL-3.0-or-later. Evening Star Productions.</div>
+  </div>
+</footer>
+
+<div class="istl">In service to Life</div>
+
+<script>
+(function(){
+  "use strict";
+  var reduce = window.matchMedia("(prefers-reduced-motion:reduce)").matches;
+  var root = document.documentElement, btn = document.getElementById("themeBtn");
+
+  function currentDark(){
+    var t = root.getAttribute("data-theme");
+    if(t) return t==="dark";
+    return window.matchMedia("(prefers-color-scheme:dark)").matches;
+  }
+  function syncLabel(){ btn.textContent = currentDark() ? "Light" : "Dark"; }
+  btn.addEventListener("click", function(){
+    root.setAttribute("data-theme", currentDark() ? "light" : "dark");
+    syncLabel();
+  });
+  syncLabel();
+  window.matchMedia("(prefers-color-scheme:dark)").addEventListener("change", syncLabel);
+
+  // ---- copy button ----
+  (function(){
+    var b = document.getElementById("copyBtn"); if(!b) return;
+    b.addEventListener("click", function(){
+      var text = "pip install ess-orrery && ess-orrery doctor";
+      var done = function(){ var o=b.textContent; b.textContent="Copied"; setTimeout(function(){ b.textContent=o; }, 1400); };
+      if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(done, done); }
+      else { done(); }
+    });
+  })();
+
+  // ---- starfield ----
+  (function(){
+    var c = document.getElementById("stars"), x = c.getContext("2d"), stars=[], W,H,dpr;
+    function size(){
+      dpr = Math.min(window.devicePixelRatio||1, 2);
+      W = c.width = Math.floor(innerWidth*dpr); H = c.height = Math.floor(innerHeight*dpr);
+      c.style.width=innerWidth+"px"; c.style.height=innerHeight+"px";
+      stars = [];
+      var n = Math.min(160, Math.floor(innerWidth*innerHeight/11000));
+      for(var i=0;i<n;i++) stars.push({x:Math.random()*W,y:Math.random()*H,r:(Math.random()*1.1+.2)*dpr,a:Math.random()*.5+.15,tw:Math.random()*2*Math.PI});
+    }
+    function draw(t){
+      x.clearRect(0,0,W,H);
+      var dark = currentDark();
+      for(var i=0;i<stars.length;i++){
+        var st=stars[i], a = st.a*(dark?1:.5)*(reduce?1:(.6+.4*Math.sin(st.tw + t/1400)));
+        x.beginPath(); x.arc(st.x,st.y,st.r,0,6.283);
+        x.globalAlpha = a; x.fillStyle = "rgba("+(dark?"233,237,246":"140,120,80")+","+a.toFixed(3)+")";
+        x.fill();
+      }
+      x.globalAlpha=1;
+      if(!reduce) requestAnimationFrame(draw);
+    }
+    size(); addEventListener("resize", size);
+    if(reduce){ draw(0); } else { requestAnimationFrame(draw); }
+  })();
+
+  // ---- scroll reveals ----
+  if(!reduce && "IntersectionObserver" in window){
+    var io=new IntersectionObserver(function(es){ es.forEach(function(en){ if(en.isIntersecting){ en.target.classList.add("in"); io.unobserve(en.target); } }); },{threshold:.14});
+    document.querySelectorAll(".rise").forEach(function(el){ io.observe(el); });
+  } else {
+    document.querySelectorAll(".rise").forEach(function(el){ el.classList.add("in"); });
+  }
+})();
+</script>
+</body>
+</html>

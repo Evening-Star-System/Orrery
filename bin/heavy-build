@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Thin shim so build scripts and operators can call the guard without knowing where
+# Orrery is installed or which interpreter it needs.
+#
+# Resolves in this order: the repo checkout's venv, a system ess-orrery install, then
+# a bare python3 with the repo on PYTHONPATH. Kept to plain POSIX-ish bash with no
+# `set -u` surprises, because this runs from inside build scripts that may have their
+# own strict modes.
+set -eo pipefail
+
+ORRERY_HOME="${ORRERY_HOME:-/opt/projects/esp/Orrery}"
+
+if [ -x "$ORRERY_HOME/.venv/bin/python" ]; then
+  exec "$ORRERY_HOME/.venv/bin/python" -m orrery.buildguard "$@"
+fi
+if command -v python3 >/dev/null 2>&1; then
+  exec env PYTHONPATH="$ORRERY_HOME${PYTHONPATH:+:$PYTHONPATH}" \
+    python3 -m orrery.buildguard "$@"
+fi
+echo "heavy-build: no python3 found" >&2
+exit 127

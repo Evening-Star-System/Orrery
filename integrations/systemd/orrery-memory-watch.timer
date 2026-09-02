@@ -1,0 +1,13 @@
+[Unit]
+Description=Memory headroom watch (every 2 minutes)
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=2min
+# A stalled box runs its timers late; without this a 2-minute timer can silently
+# become a 20-minute one and the gap looks like "no alerts" rather than "no data".
+AccuracySec=15s
+Unit=orrery-memory-watch.service
+
+[Install]
+WantedBy=timers.target

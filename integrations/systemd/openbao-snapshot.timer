@@ -1,0 +1,10 @@
+[Unit]
+Description=Nightly OpenBao raft snapshot at 07:40 local
+
+[Timer]
+OnCalendar=*-*-* 07:40:00
+AccuracySec=1min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

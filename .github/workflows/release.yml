@@ -1,0 +1,54 @@
+name: release
+
+# Build and publish ess-orrery to PyPI on a version tag, with PEP 740 digital
+# attestations via Trusted Publishing (keyless OIDC, no stored token). Attestations are
+# produced by default by gh-action-pypi-publish v1.11+. A published release is therefore
+# signed by the identity of this workflow, verifiable on PyPI, with no long-lived key to
+# lose. See RELEASING.md for the one-time PyPI trusted-publisher setup.
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build sdist and wheel
+        run: |
+          python -m pip install --upgrade build
+          python -m build
+      - name: Check the built distribution
+        run: |
+          python -m pip install --upgrade twine
+          twine check dist/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    # Requires a PyPI Trusted Publisher configured for this repo + workflow. No GitHub
+    # environment is used: environments need a paid plan on a private repo, and they are
+    # optional for trusted publishing. Add one (and set it in the PyPI publisher) once this
+    # repo is public or on a paid plan, if a required-reviewer release gate is wanted.
+    permissions:
+      id-token: write   # OIDC for Trusted Publishing + PEP 740 attestations
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - name: Publish to PyPI (attested, trusted publishing)
+        uses: pypa/gh-action-pypi-publish@release/v1
+        # No credentials: identity comes from OIDC. attestations default to true (v1.11+).

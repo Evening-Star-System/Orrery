@@ -1,0 +1,20 @@
+# Behavior-lock gate for GitHub-hosted projects. Copy to .github/workflows/behavior-locks.yml.
+# For a non-GitHub CI (Codeberg/Woodpecker/Forgejo, a forge runner, etc.), do not copy this
+# file: just call `sh scripts/orrery-locks-gate.sh` as a step in that CI instead. The gate
+# logic lives in the script, not here, so every CI shares one gate.
+#
+# DEPENDENCY: this installs `ess-orrery` from PyPI, which is not published yet (that publish
+# is gated). Until it is, either publish it or replace the install step with an install from
+# source (e.g. a pinned wheel, or `pip install <path-or-url>` your CI can reach with auth).
+name: behavior-locks
+on: [push, pull_request]
+jobs:
+  behavior-locks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install ess-orrery
+      - run: sh scripts/orrery-locks-gate.sh

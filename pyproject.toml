@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ess-orrery"
+description = "Operator control plane: holds the declared shape of a fleet and proves reality still matches."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "AGPL-3.0-or-later"
+authors = [{ name = "Evening Star Productions" }]
+dynamic = ["version"]
+# The engines (reconciler, context) are stdlib-only: zero runtime dependencies.
+dependencies = []
+
+[project.optional-dependencies]
+tui = ["textual>=8,<9"]
+
+[project.scripts]
+ess-orrery = "orrery.cli:main"
+
+[tool.setuptools.dynamic]
+version = { attr = "orrery.__version__" }
+
+[tool.setuptools.packages.find]
+include = ["orrery*"]

@@ -1,0 +1,182 @@
+# Example profile: the declared shape of a box, with placeholder identity.
+#
+# A profile is per-installation PROFILE data. Copy this to a local, gitignored file
+# (for example `<box>.local.toml`, or the operator's own private path) and fill in the
+# real paths and hosts. Real profiles are never committed to this repo, because they
+# carry install-specific identity. The engine and checks do not change per install.
+schema = 1
+box = "example"
+
+# org-map: one source-of-truth table, and the consumers that re-encode it. The check
+# flags any consumer whose bucket-to-account mapping disagrees with the source.
+[[checks]]
+id = "org-map"
+source = "/path/to/orgs.tsv"                 # tab-separated, header row with bucket/host/account
+
+  [[checks.consumers]]
+  path = "/path/to/a/python/consumer.py"
+  parser = "python-dict"                     # ast-parse a named dict literal
+  symbol = "BUCKET_ACCT"                     # {bucket: (host, account)}
+
+  [[checks.consumers]]
+  path = "/path/to/a/bash/consumer"
+  parser = "bash-assoc"                      # declare -A NAME=( [bucket]=host/account )
+  name = "ACCT"
+
+  [[checks.consumers]]
+  path = "/path/to/another/bash/consumer"
+  parser = "bash-case"                       # func(){ case "$1" in bucket) echo account;; esac }
+  func = "org_of"
+  implied_host = "github.com"                # this encoding stores account only; host is implied
+
+# fleet-reach: the declared reach matrix as a live invariant. Edges are FROM this box.
+[[checks]]
+id = "fleet-reach"
+timeout = 5
+
+  [[checks.edges]]
+  to = "some-box"
+  expect = "ok"                              # reachable as declared; unreachable -> FAIL
+
+  [[checks.edges]]
+  to = "a-deliberately-closed-box"
+  expect = "denied"                          # unreachable is correct; reachable -> DRIFT (regression)
+
+# secret-edges: the secret-to-consumer graph. Declare each secret by its NON-SECRET
+# identity (a vault path or an env var name, NEVER its value) and where it is consumed.
+# The check confirms each edge, flags stale ones, and (with discover_root) finds
+# undeclared references. Value-blind: it emits only the identity and file paths.
+[[checks]]
+id = "secret-edges"
+discover_root = "/path/to/scan/for/undeclared/references"   # optional
+
+  [[checks.secrets]]
+  ref = "some-store/tokens/example"        # a vault path or logical name, not the value
+    [[checks.secrets.consumers]]
+    path = "/path/to/a/consumer/that/references/it"
+
+# floors: calibrated floors/ceilings. min = a floor (below it FAILs, e.g. data loss);
+# max = a ceiling/budget (above it WARNs); recalibrate_ratio flags a stale floor (INFO).
+[[checks]]
+id = "floors"
+
+  [[checks.floors]]
+  name = "example content floor"
+  path = "/path/to/a/directory"
+  kind = "file_count"          # file_count (a dir) | line_count (a file)
+  min = 100
+  recalibrate_ratio = 3.0      # actual > min*ratio -> INFO, floor is stale
+
+  [[checks.floors]]
+  name = "example digest budget"
+  path = "/path/to/a/file"
+  kind = "line_count"
+  max = 250                    # above this -> WARN (ceiling exceeded)
+
+# managed-settings: the enforcement layer must be root-owned and not editable by non-owners.
+# require_owner_uid (usually 0), max_mode (most permissive mode allowed; 0644 = no group/other write),
+# planned (absent reports INFO not FAIL, for a promotion not yet done).
+[[checks]]
+id = "managed-settings"
+
+  [[checks.files]]
+  path = "/path/to/an/enforcement/file"
+  require_owner_uid = 0
+  max_mode = "0644"
+
+  [[checks.files]]
+  path = "/path/to/a/planned/managed-settings/file"
+  require_owner_uid = 0
+  max_mode = "0644"
+  planned = true
+
+# declared-presence: required members exist; planned-absent paths are still absent.
+[[checks]]
+id = "declared-presence"
+required = [
+  "/path/that/must/exist",
+]
+planned_absent = [
+  "/path/that/should/not/exist/yet",         # absent -> INFO; present -> WARN (profile stale)
+]
+
+# session-ownership: a unit must actually OWN the process tree it declares. A daemonising server
+# (tmux is the canonical case) lands in whichever cgroup reached it FIRST, so a unit can report
+# active over an EMPTY cgroup. When that happens any MemoryMax/IO limit on the unit is silently a
+# no-op, and the real processes inherit the lifetime of whatever scope does own them.
+# expect_process matches /proc/<pid>/comm by SUBSTRING, because comm is 15 chars and tmux reports
+# "tmux: server"; exact matching would false-DRIFT a correct box.
+[[checks]]
+id = "session-ownership"
+
+  [[checks.units]]
+  name = "example session server"
+  unit = "tmux-sessions.service"
+  slice = "system.slice"       # optional, default system.slice
+  expect_process = "tmux"      # optional; substring match on comm
+  min_procs = 1                # optional, default 1
+
+# Memory headroom: catches the limit COMPOSITION that cannot recover on its own.
+#
+# A MemoryHigh brake holds a slice below its MemoryMax wall by reclaiming. Once swap is
+# at its ceiling the only reclaim target left is the file cache, which gets evicted to
+# nothing, so every process re-reads its own mappings from disk continuously. And
+# because the brake succeeds, the wall is never reached, so the in-cgroup OOM killer
+# never fires. Nothing dies, so nothing recovers -- while oom_kill still reads 0.
+#
+# Each condition alone is ordinary operation, so the check only reports FAIL for the
+# conjunction. Tune per slice: a build slice legitimately runs hotter than a slice full
+# of interactive sessions, and wants a lower cache floor and a higher stall tolerance.
+[[checks]]
+id = "memory-headroom"
+
+  [[checks.slices]]
+  name = "root sessions"
+  path = "/sys/fs/cgroup/user.slice/user-0.slice"
+  psi_full_avg300_max = 20.0   # % of wall-clock the whole cgroup may be stalled
+  min_file_cache_mb = 128      # below this the slice is re-reading from disk
+
+  # A build slice is transient: it exists only while a build runs, so an "absent"
+  # verdict here is normal and reports as DRIFT rather than FAIL.
+  [[checks.slices]]
+  name = "builds"
+  path = "/sys/fs/cgroup/builds.slice"
+  psi_full_avg300_max = 40.0
+  min_file_cache_mb = 32
+
+# Does a credential still DO what its consumers need?
+#
+# A credential that expires, or is re-minted with a narrower policy set, looks identical to a
+# healthy one from outside: the vault reports unsealed, the env file holds a plausible token,
+# and the secret-to-consumer graph (see secret-edges) is intact. It has simply stopped working
+# -- in every session and every repository at once. Presence is not capability.
+#
+# The exercise runs on the box, where the credential already lives: a probe compares
+# sys/capabilities-self against the paths the CONSUMER declares it needs, so the expectation is
+# derived rather than restated in a second list that can drift. This check reads that report, so
+# the reconciler holds no credentials and only vault paths and capability names reach a finding.
+#
+# max_age_minutes must exceed the probe's interval, or a healthy fleet reports DRIFT on jitter
+# alone. A report older than this is DRIFT even when its verdict says OK: a stale pass is how a
+# dead probe hides a dead credential.
+[[checks]]
+id = "vault-capability"
+name = "git identity credential"
+report_path = "/var/lib/orrery/vault-credentials.json"
+max_age_minutes = 60
+
+# behavior-lock: a shipped feature's observable behavior, held as a floor. Each named
+# consumer repo ships an `orrery-locks.toml` declaring the behaviors it will not let
+# regress. Default posture is adjudicate: the consumer's own pipeline runs each probe
+# and writes the observed value to `orrery-locks.results.json`; Orrery reads the golden
+# and the observed value and owns the verdict (observed != golden -> FAIL). It never
+# runs the consumer's build. `mode = "local"` is a development-only convenience that
+# shells the command out under a timeout; it is not the gate.
+[[checks]]
+id = "behavior-lock"
+# mode = "adjudicate"      # default; "local" runs the probe here (dev only)
+
+  [[checks.repos]]
+  root = "/path/to/a/consumer/repo"          # holds orrery-locks.toml + orrery-locks.results.json
+  # manifest = "/explicit/path/to/orrery-locks.toml"    # optional; default <root>/orrery-locks.toml
+  # results = "/explicit/path/to/results.json"          # optional; default <root>/orrery-locks.results.json
