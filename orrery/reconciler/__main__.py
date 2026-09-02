@@ -1,7 +1,11 @@
-"""CLI: python -m orrery.reconciler --profile PATH [--ssh HOST] [--format human|json|prometheus] [--check ID] [--strict]
+"""CLI: python -m orrery.reconciler (--profile PATH | --profiles GLOB) [--ssh HOST] [--format human|json|prometheus] [--check ID] [--strict]
 
 Exit 0 when the box is clean (worst finding at or below INFO), 1 on drift or worse.
 Report-only: this never changes the box. With --ssh, measures a remote host read-only.
+
+`--profiles GLOB` reconciles every matched profile and rolls the verdicts into one fleet
+verdict: exit 0 only when every profile ran and every profile was clean. The fleet result
+flows through the same enforcer seam and the same reporters as a single profile.
 """
 
 from __future__ import annotations
@@ -13,15 +17,42 @@ import tomllib
 
 from .box import SshBox
 from .engine import run_profile
-from .report import render_human, render_json, render_prometheus, render_prometheus_error
+from .report import (
+    render_fleet_human,
+    render_fleet_json,
+    render_fleet_prometheus,
+    render_human,
+    render_json,
+    render_prometheus,
+    render_prometheus_error,
+)
 
-# Exit codes: 0 clean, 1 drift-or-worse, 2 the profile itself could not be loaded.
+# Exit codes: 0 clean, 1 drift-or-worse, 2 the profile(s) could not be loaded / none matched.
 EXIT_PROFILE_ERROR = 2
+
+
+def _strict_errors(path: str) -> list[str]:
+    """Shape errors that should stop a --strict run: a typo'd check id runs nothing, and in
+    CI a profile that silently checks less than it claims should fail, not pass quietly."""
+    from .registry import known_ids, option_schemas
+    from .validate import ERROR, validate_profile
+
+    return [
+        f"{i.location}: {i.message}"
+        for i in validate_profile(path, known_ids(), option_schemas())
+        if i.level == ERROR
+    ]
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="ess-orrery reconcile")
-    parser.add_argument("--profile", required=True, help="path to a TOML profile")
+    target = parser.add_mutually_exclusive_group(required=True)
+    target.add_argument("--profile", help="path to a single TOML profile")
+    target.add_argument(
+        "--profiles",
+        metavar="GLOB",
+        help="a glob matching many profiles; reconcile each and roll up into one fleet verdict",
+    )
     parser.add_argument("--ssh", metavar="HOST", help="measure a remote host (ssh alias) read-only")
     parser.add_argument(
         "--format",
@@ -48,20 +79,16 @@ def main(argv: list[str] | None = None) -> int:
     fmt = "json" if args.json else args.format
     box = SshBox(args.ssh) if args.ssh else None
 
+    if args.profiles is not None:
+        return _run_fleet(args, fmt, box)
+
     # Default runs are resilient: an unknown check id degrades to a WARN and the rest still
     # run. --strict is for CI, where a profile that silently checks less than it claims should
     # fail the pipeline instead. Report-only either way; this only decides whether to start.
     if args.strict:
-        from .registry import known_ids, option_schemas
-        from .validate import ERROR, validate_profile
-
-        errors = [
-            i
-            for i in validate_profile(args.profile, known_ids(), option_schemas())
-            if i.level == ERROR
-        ]
+        errors = _strict_errors(args.profile)
         if errors:
-            lines = [f"{i.location}: {i.message}" for i in errors]
+            lines = errors
             if fmt == "json":
                 print(
                     json.dumps(
@@ -109,6 +136,47 @@ def main(argv: list[str] | None = None) -> int:
     else:
         print(render_human(result, exit_code))
 
+    return exit_code
+
+
+def _fleet_error(fmt: str, message: str) -> int:
+    """Report a fleet that could not run at all (nothing matched, or --strict caught a bad
+    profile), in the same format the run would have used."""
+    if fmt == "json":
+        print(json.dumps({"generated_by": "orrery-reconciler", "kind": "fleet", "error": message}, indent=2))
+    elif fmt == "prometheus":
+        print(render_prometheus_error(), end="")
+    else:
+        print(message, file=sys.stderr)
+    return EXIT_PROFILE_ERROR
+
+
+def _run_fleet(args, fmt: str, box) -> int:
+    from ..enforce.builtin import get_enforcer
+    from .fleet import matched_profiles, run_fleet
+
+    paths = matched_profiles(args.profiles)
+    if not paths:
+        # An empty match is a misconfigured glob, not an all-clear. Surface it, never pass it.
+        return _fleet_error(fmt, f"no profiles matched {args.profiles!r}")
+
+    if args.strict:
+        bad = [(p, errs) for p in paths if (errs := _strict_errors(p))]
+        if bad:
+            lines = [f"{p}: {msg}" for p, errs in bad for msg in errs]
+            return _fleet_error(fmt, "invalid profile(s) (--strict):\n  " + "\n  ".join(lines))
+
+    fleet = run_fleet(paths, box=box, only=args.check)
+    exit_code = get_enforcer(args.enforce).act(fleet)
+
+    if fmt == "json":
+        print(render_fleet_json(fleet))
+    elif fmt == "prometheus":
+        import time
+
+        print(render_fleet_prometheus(fleet, time.time()), end="")
+    else:
+        print(render_fleet_human(fleet, exit_code))
     return exit_code
 
 

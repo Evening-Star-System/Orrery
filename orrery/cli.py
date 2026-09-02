@@ -19,7 +19,7 @@ _COUNTED = {"reconcile", "context", "deck", "update", "backup", "restore", "lock
 _USAGE = (
     "ess-orrery <command> [args]\n\n"
     "commands:\n"
-    "  reconcile   run a reconciler profile (drift report)\n"
+    "  reconcile   run a reconciler profile, or a fleet with --profiles GLOB (drift report)\n"
     "  profile     validate a profile's shape before you rely on it\n"
     "  ruleset     author an org canon a profile adopts (validate, describe)\n"
     "  lock        author behavior locks (capture a golden, probe, add)\n"

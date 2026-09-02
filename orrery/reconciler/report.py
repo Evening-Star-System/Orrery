@@ -102,14 +102,96 @@ def render_prometheus_error(box: str = "unknown") -> str:
     )
 
 
-def render_json(result: Result) -> str:
-    payload = {
+def _result_payload(result: Result) -> dict:
+    return {
         "box": result.box,
-        "generated_by": "orrery-reconciler",
         "worst": result.worst.label,
         "clean": result.clean,
         "exit_code": result.exit_code,
         "summary": {k: v for k, v in result.counts().items() if v},
         "findings": [f.as_dict() for f in result.findings],
     }
+
+
+def render_json(result: Result) -> str:
+    return json.dumps({"generated_by": "orrery-reconciler", **_result_payload(result)}, indent=2)
+
+
+# --- fleet: many profiles rolled into one verdict ---------------------------------------
+# These reuse the single-profile renderers above (one mechanism, many uses). Import the
+# fleet type lazily inside the functions so report has no import-time dependency on it.
+
+
+def render_fleet_human(fleet, exit_code: int | None = None) -> str:
+    """A scannable roll-up: one status line per profile, then the findings of only the ones
+    that need attention (a clean profile's OK findings are noise in a fleet view), then a
+    summary that states coverage. Legible to a human at a glance; the JSON form serves a
+    machine."""
+    code = fleet.exit_code if exit_code is None else exit_code
+    lines: list[str] = ["reconciler fleet", ""]
+    for run in fleet.runs:
+        if run.result is None:
+            lines.append(f"  ERROR {run.box}: could not load ({run.error})")
+        elif run.result.clean:
+            summary = " ".join(f"{k}={v}" for k, v in run.result.counts().items() if v)
+            lines.append(f"  ok    {run.box}: clean ({summary or 'no findings'})")
+        else:
+            summary = " ".join(f"{k}={v}" for k, v in run.result.counts().items() if v)
+            lines.append(f"  DRIFT {run.box}: {summary}")
+    dirty = fleet.dirty
+    if dirty:
+        lines.append("")
+        for run in dirty:
+            if run.result is None:
+                continue  # already reported above; nothing to expand
+            block = render_human(run.result, run.result.exit_code)
+            lines.append("--- " + run.box + " " + "-" * max(4, 60 - len(run.box)))
+            lines.append(block)
+    clean_n = sum(1 for r in fleet.runs if r.clean)
+    total = len(fleet.runs)
+    verdict = "CLEAN" if fleet.clean else "DRIFT DETECTED"
+    lines.append("")
+    lines.append(
+        f"fleet: {total} profile(s)  ->  {clean_n} clean, {len(dirty)} need attention"
+        f"  ->  {verdict} (exit {code})"
+    )
+    return "\n".join(lines)
+
+
+def render_fleet_json(fleet) -> str:
+    profiles = [
+        {
+            "path": r.path,
+            "box": r.box,
+            "clean": r.clean,
+            "error": r.error,
+            "result": _result_payload(r.result) if r.result is not None else None,
+        }
+        for r in fleet.runs
+    ]
+    payload = {
+        "generated_by": "orrery-reconciler",
+        "kind": "fleet",
+        "clean": fleet.clean,
+        "exit_code": fleet.exit_code,
+        "summary": {
+            "profiles": len(fleet.runs),
+            "clean": sum(1 for r in fleet.runs if r.clean),
+            "need_attention": len(fleet.dirty),
+        },
+        "profiles": profiles,
+    }
     return json.dumps(payload, indent=2)
+
+
+def render_fleet_prometheus(fleet, now: float) -> str:
+    """One exposition block per profile. Each carries its own box label, which is exactly how
+    Prometheus distinguishes series, so a fleet is naturally many boxes. An unloadable profile
+    still emits `orrery_up 0` under its path, so a gap is scrapeable, not invisible."""
+    parts: list[str] = []
+    for run in fleet.runs:
+        if run.result is not None:
+            parts.append(render_prometheus(run.result, now))
+        else:
+            parts.append(render_prometheus_error(run.box))
+    return "".join(parts)
