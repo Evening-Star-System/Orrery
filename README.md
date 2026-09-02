@@ -7,9 +7,6 @@ matches it. An orrery is a clockwork model of a star system: one central mechani
 in correct relation, and you turn it by hand to see where everything is. One control plane, many
 boxes, an instrument for seeing, operable by hand.
 
-Built in service to life, as a permaculture: surplus flows to need, every element serves many
-functions, and the whole is meant to regenerate and improve over time.
-
 ## Install
 
 The engines have zero runtime dependencies (Python 3.11+ only):

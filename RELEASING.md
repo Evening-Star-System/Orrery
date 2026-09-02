@@ -34,10 +34,11 @@ independently of PyPI.
 
 Before the first publish, on PyPI (account owner):
 1. Add a **Trusted Publisher** for this project: repo `Evening-Star-System/Orrery`, workflow
-   `release.yml`, environment `pypi`. Use a *pending* publisher to also claim the `ess-orrery` name
-   before the first upload.
-2. Optionally register a GitHub Actions environment named `pypi` with required reviewers, so a publish
-   needs a human click.
+   `release.yml`, with the **environment left blank**. A GitHub Actions environment needs a paid plan on
+   a private repo and is optional for trusted publishing. A *pending* publisher can claim a new name
+   before its first upload.
+2. Optional, once the repo is public or on a paid plan: register a GitHub Actions environment, set the
+   same name in the trusted-publisher config, and add required reviewers so a publish needs a human click.
 
 No API token is ever created or stored; publishing authenticates via OIDC.
 
