@@ -14,7 +14,7 @@ from . import __version__
 # Product commands whose use is counted when telemetry is opted in. `bump` is a no-op when
 # telemetry is off (the default), so these commands still write nothing on a default install.
 # doctor (a diagnostic), version, telemetry, and help are intentionally not counted.
-_COUNTED = {"reconcile", "context", "deck", "update", "backup", "restore", "lock", "ruleset", "protect"}
+_COUNTED = {"reconcile", "context", "deck", "update", "backup", "restore", "lock", "ruleset", "protect", "recover"}
 
 _USAGE = (
     "ess-orrery <command> [args]\n\n"
@@ -24,6 +24,7 @@ _USAGE = (
     "  ruleset     author an org canon a profile adopts (validate, describe)\n"
     "  lock        author behavior locks (capture a golden, probe, add)\n"
     "  protect     record a file's content-address so integrity can be verified\n"
+    "  recover     restore a protected file to its recorded content-address\n"
     "  context     resolve the context for a working directory\n"
     "  deck        launch the themed terminal deck (needs the 'tui' extra)\n"
     "  doctor      verify this installation\n"
@@ -74,6 +75,10 @@ def main(argv: list[str] | None = None) -> int:
         from .integrity.cli import main as protect_main
 
         return protect_main(rest)
+    if command == "recover":
+        from .integrity.recover import main as recover_main
+
+        return recover_main(rest)
     if command == "context":
         from .context.__main__ import main as context_main
 
