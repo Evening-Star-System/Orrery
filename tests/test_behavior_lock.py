@@ -1,7 +1,7 @@
 import json
 
 from orrery.reconciler.checks.behavior_lock import BehaviorLockCheck
-from orrery.reconciler.model import Severity
+from orrery.reconciler.model import CLEAN_CEILING, Severity
 
 ROOT = "/repo"
 MANIFEST = "/repo/orrery-locks.toml"
@@ -116,9 +116,12 @@ def test_malformed_results_degrade_to_warn_per_lock():
     assert f.severity == Severity.WARN
 
 
-def test_no_repos_declared_warns():
+def test_no_repos_declared_is_info_not_a_block():
+    # Adopting the canon (which carries this check) with nothing to check yet is an expected,
+    # acknowledged state, not a problem: INFO, which is clean. Adoption binds, it does not block.
     findings = BehaviorLockCheck().run({"repos": []}, FakeBox({}))
-    assert findings and findings[0].severity == Severity.WARN
+    assert findings and findings[0].severity == Severity.INFO
+    assert findings[0].severity <= CLEAN_CEILING  # a blank adopted project reconciles clean
 
 
 def test_repo_may_be_a_bare_string_root():

@@ -56,6 +56,30 @@ def test_cli_prints_diff_and_does_not_write_without_apply(tmp_path, capsys):
     assert prof.read_text() == 'box = "m"\n'           # unchanged: diff only
 
 
+def test_absolute_writes_the_canon_absolute_path(tmp_path):
+    canon = _canon(tmp_path)
+    prof = tmp_path / "sub" / "p.toml"
+    prof.parent.mkdir()
+    after, action = promote_text('box = "m"\n', str(canon), str(prof), absolute=True)
+    assert action == "adopt"
+    assert f'path = "{canon}"' in after  # the absolute canon path, verbatim, not a ../ relative
+    prof.write_text(after)
+    assert [c.id for c in load_profile(prof).checks] == ["behavior-lock"]  # still resolves
+
+
+def test_absolute_reference_is_detected_for_noop_and_bump(tmp_path):
+    # An absolute reference, once written, must be recognised on re-promote (noop / bump), not
+    # duplicated. This is what makes the fleet backfill idempotent.
+    canon = _canon(tmp_path, "1.0.0")
+    prof = tmp_path / "p.toml"
+    after, _ = promote_text('box = "m"\n', str(canon), str(prof), absolute=True)
+    _, action = promote_text(after, str(canon), str(prof), absolute=True)
+    assert action == "noop"
+    _canon(tmp_path, "1.1.0")  # canon advances
+    bumped, action = promote_text(after, str(canon), str(prof), absolute=True)
+    assert action == "bump" and 'pin = "1.1.0"' in bumped and str(canon) in bumped
+
+
 def test_cli_apply_writes_and_loads(tmp_path, capsys):
     canon = _canon(tmp_path)
     prof = tmp_path / "p.toml"

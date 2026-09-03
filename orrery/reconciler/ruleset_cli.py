@@ -31,6 +31,7 @@ def main(argv: list[str]) -> int:
     p.add_argument("canon", help="path to the canon ruleset to promote")
     p.add_argument("--into", required=True, help="the target profile that should adopt the canon")
     p.add_argument("--pin", default=None, help="version to pin (default: the canon's current version)")
+    p.add_argument("--absolute", action="store_true", help="write the canon's absolute path (default: relative to the profile) -- use for one shared canon at a fixed location")
     p.add_argument("--apply", action="store_true", help="write the change (default: print the diff for review)")
     args = parser.parse_args(argv)
 
@@ -39,12 +40,12 @@ def main(argv: list[str]) -> int:
     if args.action == "describe":
         return _describe(args.path, args.json)
     if args.action == "promote":
-        return _promote(args.canon, args.into, args.pin, args.apply)
+        return _promote(args.canon, args.into, args.pin, args.apply, args.absolute)
     print(_USAGE, file=sys.stderr)
     return 2
 
 
-def _promote(canon: str, into: str, pin, apply: bool) -> int:
+def _promote(canon: str, into: str, pin, apply: bool, absolute: bool = False) -> int:
     try:
         load_ruleset(canon)  # fail early on a bad canon
     except (OSError, ValueError) as exc:
@@ -56,7 +57,7 @@ def _promote(canon: str, into: str, pin, apply: bool) -> int:
         print(f"promote: cannot read {into} ({exc.__class__.__name__})", file=sys.stderr)
         return 2
 
-    after, action = promote_text(before, canon, into, pin)
+    after, action = promote_text(before, canon, into, pin, absolute=absolute)
     if action == "noop":
         print(f"{into} already adopts this canon at that version; nothing to promote")
         return 0

@@ -110,16 +110,28 @@ def _toml_str(value: str) -> str:
     return "".join(out)
 
 
-def promote_text(profile_text: str, canon_path: str | Path, profile_path: str | Path, version: str | None = None):
+def promote_text(
+    profile_text: str,
+    canon_path: str | Path,
+    profile_path: str | Path,
+    version: str | None = None,
+    absolute: bool = False,
+):
     """Return (new_profile_text, action) for adopting or bumping a `[[rulesets]]` reference to
     `canon_path` in the profile at `profile_path`, pinned to `version` (default: the canon's current
     version). action is 'adopt' (a new reference added), 'bump' (an existing pin updated), or 'noop'
-    (already at that version). Promotion moves a rule reference; it enforces nothing."""
+    (already at that version). Promotion moves a rule reference; it enforces nothing.
+
+    The written path is relative to the profile by default (relocatable: move the tree and both
+    move together). Pass absolute=True to write the canon's absolute path instead, which is the
+    right choice for a single shared canon at a fixed location that many profiles at differing
+    depths all point at. Either form resolves the same at load time (apply_rulesets accepts both).
+    """
     ruleset = load_ruleset(canon_path)
     ver = str(version) if version else ruleset.version
     profile_dir = os.path.dirname(os.path.abspath(str(profile_path)))
     canon_abs = os.path.abspath(str(canon_path))
-    rel = os.path.relpath(canon_abs, profile_dir)
+    to_write = canon_abs if absolute else os.path.relpath(canon_abs, profile_dir)
 
     data = tomllib.loads(profile_text) if profile_text.strip() else {}
     for ref in data.get("rulesets", []) or []:
@@ -135,7 +147,7 @@ def promote_text(profile_text: str, canon_path: str | Path, profile_path: str | 
 
     nl = "\r\n" if "\r\n" in profile_text else "\n"
     prefix = "" if (not profile_text or profile_text.endswith(("\n", "\r"))) else nl
-    block = f"{nl}[[rulesets]]{nl}path = {_toml_str(rel)}{nl}pin = {_toml_str(ver)}{nl}"
+    block = f"{nl}[[rulesets]]{nl}path = {_toml_str(to_write)}{nl}pin = {_toml_str(ver)}{nl}"
     return profile_text + prefix + block, "adopt"
 
 

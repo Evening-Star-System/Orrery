@@ -72,7 +72,10 @@ class BehaviorLockCheck:
     def run(self, options: dict, box: Box) -> list[Finding]:
         repos = options.get("repos") or []
         if not repos:
-            return [Finding(ID, Severity.WARN, ID, "no consumer repos declared")]
+            # Adopted but not yet used: an acknowledged, expected state that is not a problem, so
+            # INFO (clean), not WARN. A project can adopt the canon and stay clean until it declares
+            # a lockable behavior; adoption binds, it does not block. (Growth makes the check bite.)
+            return [Finding(ID, Severity.INFO, ID, "no consumer repos declared yet (nothing to check)")]
         default_mode = str(options.get("mode", "adjudicate")).lower()
 
         findings: list[Finding] = []
