@@ -1,0 +1,75 @@
+# A starter conduct ruleset: a small, opinionated set of working principles a team can adopt as a
+# shared baseline, plus one machine-enforced check. It is meant to be copied and edited, not followed
+# to the letter. Keep what fits your team, change the wording, drop what does not, add your own.
+#
+# Principles here are conduct: they are enforced by people and process (review, habit), not by the
+# reconciler. The one check (behavior-lock) is enforced by the reconciler once a project declares the
+# behaviors it wants to hold. A profile adopts this file with:
+#
+#   [[rulesets]]
+#   path = "rulesets/starter.ruleset.toml"
+#   pin  = "0.1.0"
+name = "starter-conduct"
+version = "0.1.0"
+
+# --- What the work is for --------------------------------------------------------------------------
+
+[[principles]]
+id = "serve-the-people-who-use-it"
+statement = "Build for the people who will actually use this. When two paths both ship, prefer the one that genuinely helps them."
+why = "Software that ships is not the same as software that helps. Keeping the user in view is what keeps the work honest."
+enforced_by = "review"
+
+[[principles]]
+id = "design-for-the-whole"
+statement = "Look past the change in front of you to the system it lives in. Where two designs are close, prefer the one that makes the other parts stronger and that ages well."
+why = "Local wins that weaken the whole cost more later. Systems that compound stay healthy; systems that only accrete get brittle."
+enforced_by = "design review"
+
+# --- How to think and answer -----------------------------------------------------------------------
+
+[[principles]]
+id = "check-before-you-claim"
+statement = "Before stating a cause, a limit, or that something does not exist, verify it. If you cannot, say plainly that it is a guess."
+why = "A confident wrong answer is more expensive than a slower verified one, because someone else has to catch it."
+enforced_by = "review"
+
+[[principles]]
+id = "ground-your-answers"
+statement = "When an answer needs a fact you do not have, go get it: read the source, run it, check the real system."
+why = "Grounded beats plausible. The fact is usually cheaper to find than the rework a guess causes."
+enforced_by = "review"
+
+# --- How to build ----------------------------------------------------------------------------------
+
+[[principles]]
+id = "scope-before-you-build"
+statement = "Prefer a short scope-then-build-then-review loop over improvising straight into production."
+why = "A little structure up front is where correctness and durability come from. It is cheaper than untangling later."
+enforced_by = "process"
+
+[[principles]]
+id = "prove-it-through-real-use"
+statement = "Verify through the real interface or the intended flow, not a passing build alone."
+why = "A green build is not working software. Only the real path shows the change does what it should."
+enforced_by = "review"
+
+# --- Care and consent ------------------------------------------------------------------------------
+
+[[principles]]
+id = "handle-the-irreversible-with-care"
+statement = "For anything hard to undo or that reaches outside the project, look before you act and confirm first. Report what actually happened, including the failures."
+why = "Trust is built on reversibility and honest reporting, not optimism about what probably worked."
+enforced_by = "review"
+
+[[principles]]
+id = "release-on-purpose"
+statement = "Treat going live as a deliberate step with an explicit sign-off, not a side effect of merging."
+why = "Outward-facing changes deserve a moment of intent, so nothing reaches the world by accident."
+enforced_by = "release process"
+
+# --- The one machine-enforced rule -----------------------------------------------------------------
+
+[[checks]]
+id = "behavior-lock"
+why = "When a behavior is hard-won or important, lock it so it cannot silently regress. Each project supplies the behaviors it wants to hold, in its own manifest."
