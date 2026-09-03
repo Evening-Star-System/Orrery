@@ -87,3 +87,13 @@ def test_cli_apply_writes_and_loads(tmp_path, capsys):
     assert ruleset_cli(["promote", str(canon), "--into", str(prof), "--apply"]) == 0
     assert "[[rulesets]]" in prof.read_text()
     load_profile(prof)  # the written profile loads
+
+
+def test_apply_records_a_plan_audit_entry(tmp_path, monkeypatch):
+    monkeypatch.setenv("ORRERY_HOME", str(tmp_path))
+    canon = _canon(tmp_path)
+    prof = tmp_path / "p.toml"; prof.write_text('box = "m"\n')
+    assert ruleset_cli(["promote", str(canon), "--into", str(prof), "--apply"]) == 0
+    from orrery.audit.store import AuditStore
+    recs = AuditStore().records()
+    assert any(r["action"] == "promote" and r["status"] == "applied" for r in recs)

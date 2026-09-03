@@ -10,16 +10,19 @@ def _sha(data):
     return "sha256:" + hashlib.sha256(data).hexdigest()
 
 
-def test_recover_restores_the_recorded_bytes(tmp_path):
+def test_recover_restores_the_recorded_bytes(tmp_path, monkeypatch):
+    monkeypatch.setenv("ORRERY_HOME", str(tmp_path))  # the plan-audit writes under state home
     store = Store(tmp_path / "cas")
     good = b"the correct config\n"
     h = store.record(good)
     f = tmp_path / "c.txt"
     f.write_bytes(b"CORRUPTED")
-    res = recover_artifact({"path": str(f), "hash": "sha256:" + h}, store, log_path=tmp_path / "recover.log")
+    res = recover_artifact({"path": str(f), "hash": "sha256:" + h}, store)
     assert res.status == "recovered"
     assert f.read_bytes() == good
-    assert (tmp_path / "recover.log").exists()  # audited
+    # the recover is now recorded in the durable plan-audit, not a bespoke recover.log
+    from orrery.audit.store import AuditStore
+    assert any(r["action"] == "recover" and r["status"] == "recovered" for r in AuditStore().records())
 
 
 def test_already_correct_is_a_noop(tmp_path):

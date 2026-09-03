@@ -62,11 +62,11 @@ def _promote(canon: str, into: str, pin, apply: bool, absolute: bool = False) ->
         print(f"{into} already adopts this canon at that version; nothing to promote")
         return 0
 
-    diff = difflib.unified_diff(
+    diff_lines = list(difflib.unified_diff(
         before.splitlines(keepends=True), after.splitlines(keepends=True),
         fromfile=into, tofile=f"{into} (after promote: {action})",
-    )
-    sys.stdout.writelines(diff)
+    ))
+    sys.stdout.writelines(diff_lines)
     if apply:
         try:
             with open(into, "w", encoding="utf-8") as f:
@@ -74,10 +74,23 @@ def _promote(canon: str, into: str, pin, apply: bool, absolute: bool = False) ->
         except OSError as exc:
             print(f"\npromote: could not write {into} ({exc.__class__.__name__})", file=sys.stderr)
             return 3
+        _record_promote(canon, into, action, "".join(diff_lines))
         print(f"\napplied ({action}): {into} now references the canon.")
     else:
         print("\n(review the diff; re-run with --apply to write it, or open a PR from it)")
     return 0
+
+
+def _record_promote(canon: str, into: str, action: str, diff: str) -> None:
+    """Record the promotion in the durable plan-audit (best-effort; a failed audit must not fail the
+    promote, the profile is already written)."""
+    try:
+        from ..audit import PlanRecord
+
+        rec = PlanRecord.propose("promote", into, f"promote {canon} into {into} ({action})", "operator")
+        rec.record_result(diff or f"promoted ({action})", status="applied")
+    except Exception:
+        pass
 
 
 def _load(path: str):

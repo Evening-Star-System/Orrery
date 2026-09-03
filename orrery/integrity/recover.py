@@ -14,10 +14,8 @@ report-only default and only runs when invoked deliberately, per artifact. Every
 from __future__ import annotations
 
 import argparse
-import json
 import os
 import sys
-import time
 import tomllib
 from dataclasses import dataclass
 from pathlib import Path
@@ -51,17 +49,24 @@ def _atomic_write(p: Path, data: bytes) -> None:
     os.replace(tmp, p)  # atomic
 
 
-def _audit(log_path: Path, path: str, from_hash, to_hash) -> None:
-    rec = {"ts": time.time(), "path": os.path.abspath(path), "from": from_hash, "to": to_hash}
+def _record(path: str, from_hash, to_hash, actor: str = "operator") -> None:
+    """Record the recover in the durable plan-audit (proposed + result). Best-effort: a failed audit
+    must not fail the recover, since the content store still holds both versions."""
     try:
-        log_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(log_path, "a", encoding="utf-8") as f:
-            f.write(json.dumps(rec) + "\n")
-    except OSError:
-        pass  # a failed audit must not fail the recover; the store still holds both versions
+        from ..audit import PlanRecord
+
+        ap = os.path.abspath(path)
+        rec = PlanRecord.propose(
+            "recover", ap,
+            f"restore {ap} to its recorded content-address\n  from {from_hash}\n  to   {to_hash}",
+            actor,
+        )
+        rec.record_result(f"restored {ap}: {from_hash} -> {to_hash}", status="recovered")
+    except Exception:
+        pass
 
 
-def recover_artifact(entry: dict, store: Store, box=None, dry_run: bool = False, log_path: Path | None = None) -> RecoverResult:
+def recover_artifact(entry: dict, store: Store, box=None, dry_run: bool = False, actor: str = "operator") -> RecoverResult:
     box = box or LocalBox()
     path = entry.get("path")
     recorded = _norm(entry.get("hash") or "")
@@ -100,7 +105,7 @@ def recover_artifact(entry: dict, store: Store, box=None, dry_run: bool = False,
                     pass
         return RecoverResult(path, "failed", "verify-after mismatch; rolled back to the pre-image", current, recorded)
 
-    _audit(log_path or (Store().root.parent / "recover.log"), path, current, recorded)
+    _record(path, current, recorded, actor)
     return RecoverResult(path, "recovered", "restored the recorded content-address", current, recorded)
 
 

@@ -64,6 +64,15 @@ def main(argv: list[str]) -> int:
     p_exp = sub.add_parser("export", help="export the whole trail")
     p_exp.add_argument("--format", choices=["csv", "json"], default="json")
 
+    p_rec = sub.add_parser("record", help="append a record (for a caller that is not python, e.g. a sprig)")
+    p_rec.add_argument("--action", required=True)
+    p_rec.add_argument("--subject", required=True)
+    p_rec.add_argument("--actor", default="operator")
+    p_rec.add_argument("--proposed", default="", help="the plan (default: a summary from action+subject)")
+    p_rec.add_argument("--approved-by", default=None)
+    p_rec.add_argument("--result", default=None, help="the resulting diff/outcome")
+    p_rec.add_argument("--status", default="applied")
+
     args = parser.parse_args(argv)
     store = AuditStore()
 
@@ -104,6 +113,18 @@ def main(argv: list[str]) -> int:
             diff = store.cas.fetch(dh)
             print("\n--- result diff ---")
             print(diff.decode("utf-8", "replace") if diff else "(diff unavailable)")
+        return 0
+
+    if args.action_cmd == "record":
+        from .record import PlanRecord
+
+        proposed = args.proposed or f"{args.action}: {args.subject}"
+        rec = PlanRecord.propose(args.action, args.subject, proposed, args.actor, store=store)
+        if args.approved_by:
+            rec.approve(args.approved_by)
+        if args.result is not None:
+            rec.record_result(args.result, status=args.status)
+        print(rec.id.split(":")[-1][:12])
         return 0
 
     if args.action_cmd == "verify":

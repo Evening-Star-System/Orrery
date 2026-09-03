@@ -67,3 +67,12 @@ def test_export_csv_and_json(seeded, capsys):
     assert audit(["export", "--format", "json"]) == 0
     rows = json.loads(capsys.readouterr().out)
     assert len(rows) == 2 and "proposed_hash" in rows[0]
+
+
+def test_record_subcommand_appends(tmp_path, monkeypatch):
+    monkeypatch.setenv("ORRERY_HOME", str(tmp_path))
+    assert audit(["record", "--action", "fold-in", "--subject", "example/app",
+                  "--result", "adopted CI", "--status", "applied"]) == 0
+    from orrery.audit.store import AuditStore
+    recs = AuditStore().records()
+    assert len(recs) == 1 and recs[0]["action"] == "fold-in" and recs[0]["status"] == "applied"
