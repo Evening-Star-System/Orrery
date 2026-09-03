@@ -32,10 +32,15 @@ def load_profile(path: str | Path) -> Profile:
     from .ruleset import apply_rulesets
 
     data = apply_rulesets(data, path.parent)
-    return load_profile_data(data)
+    # Project-awareness for a fleet reconcile: an operator profile lives at
+    # <project>/.dev/orrery.profile.toml, so its project root is two levels up. A canon
+    # behavior-lock check that declares no repos then adjudicates THIS project's own manifest,
+    # with zero per-project config. Non-.dev profiles keep their exact current behavior.
+    project_root = path.parent.parent if path.parent.name == ".dev" else None
+    return load_profile_data(data, project_root)
 
 
-def load_profile_data(data: dict) -> Profile:
+def load_profile_data(data: dict, project_root: str | Path | None = None) -> Profile:
     box = data.get("box")
     if not box:
         raise ValueError("profile is missing the required key: box")
@@ -45,5 +50,7 @@ def load_profile_data(data: dict) -> Profile:
         if not cid:
             raise ValueError("every [[checks]] entry needs an id")
         options = {k: v for k, v in raw.items() if k != "id"}
+        if project_root is not None and cid == "behavior-lock" and not options.get("repos"):
+            options["repos"] = [{"root": str(project_root)}]
         checks.append(CheckConfig(id=cid, options=options))
     return Profile(box=str(box), checks=checks)
