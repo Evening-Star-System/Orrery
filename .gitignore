@@ -75,3 +75,4 @@ docs/THREAT-MODEL.md
 docs/secret-rotation-comparison.md
 docs/DECISION-one-engine.md
 docs/DECISION-agent-workspace-primitives.md
+docs/DECISION-agent-trust-latency.md
