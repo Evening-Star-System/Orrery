@@ -71,6 +71,33 @@ def test_export_csv_and_json(seeded, capsys):
     assert len(rows) == 2 and "proposed_hash" in rows[0]
 
 
+def test_head_prints_seq_and_honest_anchor_state(seeded, capsys):
+    assert audit(["head"]) == 0
+    out = capsys.readouterr().out
+    assert "seq 4" in out and "none set" in out and "would not be detected" in out
+
+
+def test_head_json(seeded, capsys):
+    assert audit(["head", "--json"]) == 0
+    obj = json.loads(capsys.readouterr().out)
+    assert obj["head"]["seq"] == 4 and obj["anchor"] is None and obj["anchored"] is None
+
+
+def test_head_empty_store(tmp_path, monkeypatch, capsys):
+    monkeypatch.setenv("ORRERY_HOME", str(tmp_path))
+    assert audit(["head"]) == 0
+    assert "no head" in capsys.readouterr().out
+
+
+def test_head_with_anchor_reports_match(tmp_path, monkeypatch, capsys):
+    monkeypatch.setenv("ORRERY_HOME", str(tmp_path))
+    monkeypatch.setenv("ORRERY_AUDIT_ANCHOR", str(tmp_path / "ext" / "anchor.jsonl"))
+    audit(["record", "--action", "recover", "--subject", "/a", "--result", "x", "--status", "applied"])
+    capsys.readouterr()
+    assert audit(["head"]) == 0
+    assert "matches" in capsys.readouterr().out
+
+
 def test_record_subcommand_appends(tmp_path, monkeypatch):
     monkeypatch.setenv("ORRERY_HOME", str(tmp_path))
     assert audit(["record", "--action", "fold-in", "--subject", "example/app",

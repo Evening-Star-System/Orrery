@@ -1,8 +1,9 @@
-"""CLI: ess-orrery audit <list|show|verify|export>
+"""CLI: ess-orrery audit <list|show|verify|export|head>
 
 Read the plan-audit by hand: list records (filtered), show one record with its full proposal and
-diff, verify the chain is intact, or export the whole trail. Human-readable by default, JSON/CSV for a
-machine. This is the human-first surface; a person can read and audit the entire trail with no AI.
+diff, verify the chain is intact, export the whole trail, or print the current head (what an external
+anchor captures). Human-readable by default, JSON/CSV for a machine. This is the human-first surface;
+a person can read and audit the entire trail with no AI.
 """
 from __future__ import annotations
 
@@ -14,7 +15,7 @@ import sys
 
 from .store import AuditStore
 
-_USAGE = "ess-orrery audit <list|show|verify|export> ..."
+_USAGE = "ess-orrery audit <list|show|verify|export|head> ..."
 _FIELDS = ["id", "ts", "actor", "action", "subject", "status", "approved_by"]
 
 
@@ -66,6 +67,9 @@ def main(argv: list[str]) -> int:
 
     p_exp = sub.add_parser("export", help="export the whole trail")
     p_exp.add_argument("--format", choices=["csv", "json"], default="json")
+
+    p_head = sub.add_parser("head", help="print the current head (seq + self) to capture in an external anchor")
+    p_head.add_argument("--json", action="store_true")
 
     p_rec = sub.add_parser("record", help="append a record (for a caller that is not python, e.g. a sprig)")
     p_rec.add_argument("--action", required=True)
@@ -148,6 +152,25 @@ def main(argv: list[str]) -> int:
             for r in recs:
                 w.writerow(_flat(r))
             sys.stdout.write(buf.getvalue())
+        return 0
+
+    if args.action_cmd == "head":
+        h = store.head()
+        anchored = store.expected_head()
+        if args.json:
+            print(json.dumps({"head": h, "anchored": anchored,
+                              "anchor": str(store.anchor) if store.anchor else None}, indent=2))
+            return 0
+        if h is None:
+            print("audit: no records yet (no head)")
+            return 0
+        print(f"head   : seq {h['seq']}  {h['self']}")
+        print(f"short  : {_short(h['self'])}")
+        if store.anchor is not None:
+            state = "matches" if anchored == h["self"] else ("ahead of anchor" if anchored else "anchor empty")
+            print(f"anchor : {store.anchor}  ({state})")
+        else:
+            print("anchor : none set (ORRERY_AUDIT_ANCHOR unset); a truncated tail would not be detected")
         return 0
 
     print(_USAGE, file=sys.stderr)
