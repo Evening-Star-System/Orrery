@@ -32,8 +32,8 @@ def test_unapproved_stays_proposed(tmp_path):
 
 def test_failed_result_closes_failed(tmp_path):
     s = _store(tmp_path)
-    rec = PlanRecord.propose("enforce", "melisae", "gate verdict", "cron", store=s)
-    rec.record_result("verdict: FAIL", status="failed")
+    rec = PlanRecord.propose("recover", "/etc/x", "restore /etc/x to golden", "operator", store=s)
+    rec.record_result("write failed: verify-after mismatch", status="failed")
     assert s.get(rec.id)["status"] == "failed"
 
 

@@ -1,8 +1,8 @@
 """PlanRecord: the small API every consequential action uses to record itself.
 
-Three moves, always the same, so every writer (recover, promote, an enforced reconcile, a fold-in)
-produces the same three-part record and the commercial layer can set the approval through the same
-seam without a fork:
+Three moves, always the same, so every writer (recover, promote, a fold-in) produces the same
+three-part record. `approve(by)` is a neutral seam: the mechanism records who approved, and a caller
+supplies that value from whatever policy it runs, without forking this API:
 
     rec = PlanRecord.propose(action, subject, proposed_body, actor)   # opens a record (proposed)
     rec.approve(by)                                                   # marks the GO (approved)

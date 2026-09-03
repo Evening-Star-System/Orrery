@@ -1,6 +1,6 @@
 """Durable plan-audit: an append-only, tamper-evident record of every consequential action, as
-proposed, approved, and resulting-diff. The audit half of the Enforcer substrate. Open-core: this
-records; the governed-autonomy layer that consumes the records is commercial."""
+proposed, approved, and resulting-diff. This is generic mechanism: it records. Any layer that reads
+these records to make a decision is a separate concern and out of scope here."""
 
 from .record import PlanRecord
 from .store import AuditStore
