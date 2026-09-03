@@ -916,7 +916,7 @@ planned_absent = [
 
       <section class="docsec" id="checks">
         <div class="sec-head sec-top rise"><span class="idx">04</span><h2>The checks</h2></div>
-        <p class="sec-sub rise">One idea generalized six ways: a thing is not "declared", it is declared AND its probe passes, continuously. Every check is read-only. Findings carry a severity (<code>ok</code>, <code>info</code>, <code>warn</code>, <code>drift</code>, <code>fail</code>); the worst finding across a run decides the exit code.</p>
+        <p class="sec-sub rise">One idea generalized eleven ways: a thing is not "declared", it is declared AND its probe passes, continuously. Every check is read-only. Findings carry a severity (<code>ok</code>, <code>info</code>, <code>warn</code>, <code>drift</code>, <code>fail</code>); the worst finding across a run decides the exit code.</p>
 
         <h3 class="sub-head rise" id="check-org-map">org-map</h3>
         <p class="proves rise"><b>Declares</b> one source-of-truth table (a TSV of bucket, host, account) plus every consumer file that re-encodes that mapping.<br><b>Proves</b> each consumer agrees with the source. A bucket a consumer maps that the source doesn't list is DRIFT; account comparison is case-insensitive on purpose (different consumers store case differently by design), host is compared only when a consumer encodes one; buckets a consumer legitimately doesn't cover are reported INFO, not a problem.</p>
@@ -935,6 +935,21 @@ planned_absent = [
 
         <h3 class="sub-head rise" id="check-managed-settings">managed-settings</h3>
         <p class="proves rise"><b>Declares</b> each enforcement file's expected owner uid and the most permissive mode it may carry.<br><b>Proves</b> the file is present, owned by that uid, and not writable by anyone but the owner, no group or other write bit, so the guard layer cannot be quietly disabled from inside. A file marked <code>planned</code> that isn't in place yet reports INFO, not FAIL, keeping a promotion path visible without failing the run.</p>
+
+        <h3 class="sub-head rise" id="check-behavior-lock">behavior-lock</h3>
+        <p class="proves rise"><b>Declares</b> the consumer repos to adjudicate and, in each, the locked behaviors: a stable id, the command that prints one canonical value, and the captured golden.<br><b>Proves</b> each locked behavior still matches its golden. An exact mismatch is FAIL; a floor (<code>&gt;=</code>) or ceiling (<code>&lt;=</code>) compare lets the value improve but not regress; a lock whose probe produced no observed value is WARN, never a false OK. This is how a hard-won fix or a shipped guarantee is kept from silently regressing.</p>
+
+        <h3 class="sub-head rise" id="check-content-address">content-address</h3>
+        <p class="proves rise"><b>Declares</b> files that must stay byte-exact, each pinned to the sha256 content address of its known-good bytes.<br><b>Proves</b> each file still hashes to its recorded address. A file that has drifted from its hash is FAIL; a missing one is DRIFT. An immutable artifact cannot change quietly.</p>
+
+        <h3 class="sub-head rise" id="check-memory-headroom">memory-headroom</h3>
+        <p class="proves rise"><b>Declares</b> a cgroup (a systemd slice or scope) that must stay recoverable, and its memory ceiling.<br><b>Proves</b> the slice can still reclaim memory and its wall is actually reachable, catching the pathological case where a brake stalls a slice at the ceiling instead of letting a runaway process die.</p>
+
+        <h3 class="sub-head rise" id="check-session-ownership">session-ownership</h3>
+        <p class="proves rise"><b>Declares</b> the units that should own specific process trees.<br><b>Proves</b> each unit actually owns the processes it declares (its cgroup holds them), so a service that has quietly lost the tree it is supposed to manage is caught before that ownership gap becomes a silent outage.</p>
+
+        <h3 class="sub-head rise" id="check-vault-capability">vault-capability</h3>
+        <p class="proves rise"><b>Declares</b> credentials by the capabilities their consumers need, never by value.<br><b>Proves</b> each declared credential can still do what those consumers require, by exercising the capability rather than reading the secret, so a token that has gone stale or lost a permission is found before a job fails on it. Presence is not capability.</p>
       </section>
 
       <section class="docsec" id="cli">

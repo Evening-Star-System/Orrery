@@ -586,6 +586,11 @@ id = "floors"
             <tr><th scope="row">secret-edges</th><td>The secret-to-consumer graph holds. It maps which secret feeds what, by a non-secret name, and never reads a secret's value.</td></tr>
             <tr><th scope="row">floors</th><td>Counts stay within declared floors and ceilings; a floor far below reality is flagged stale.</td></tr>
             <tr><th scope="row">managed-settings</th><td>The enforcement layer stays root-owned and unwritable by anyone else.</td></tr>
+            <tr><th scope="row">behavior-lock</th><td>Shipped behaviors stay locked to their recorded goldens; a regression fails the gate, and a floor or ceiling lets a value improve without sliding back.</td></tr>
+            <tr><th scope="row">content-address</th><td>Protected files stay byte-exact to the sha256 content address of their known-good bytes.</td></tr>
+            <tr><th scope="row">memory-headroom</th><td>A cgroup that must stay recoverable can still reclaim memory and its ceiling is actually reachable.</td></tr>
+            <tr><th scope="row">session-ownership</th><td>A unit that declares it owns a process tree actually owns it.</td></tr>
+            <tr><th scope="row">vault-capability</th><td>A declared credential can still do what its consumers need, checked by capability, never by reading the secret.</td></tr>
           </tbody>
         </table>
       </div>
