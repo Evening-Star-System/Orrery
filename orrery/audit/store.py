@@ -6,6 +6,13 @@ the log is a chain: altering or dropping any past entry breaks it, which `verify
 proposal text, the resulting diff) live in the content-addressed store and are referenced by hash, so
 what a record CLAIMS was proposed or changed cannot quietly differ from the bytes. No new crypto: the
 same sha256 content-addressing the integrity store already uses.
+
+The chain proves nobody can alter, reorder, or mid-delete an entry without rewriting every later hash.
+It cannot, on its own, prove the TAIL is complete: lopping off the newest entries leaves a shorter but
+consistent chain. Detecting that needs an anchor the actor cannot retro-edit. This store emits the head
+(seq + self) to `ORRERY_AUDIT_ANCHOR` when set (point it at an append-only sink outside the log's own
+trust domain), and `verify` fails if an anchored head is no longer in the log. With no anchor set,
+`verify` is internally honest and SAYS a truncated tail would not be detected.
 """
 from __future__ import annotations
 
@@ -25,9 +32,12 @@ def _canon(d: dict) -> str:
 
 
 class AuditStore:
-    def __init__(self, root: Path | str | None = None, cas: Store | None = None):
+    def __init__(self, root: Path | str | None = None, cas: Store | None = None,
+                 anchor: Path | str | None = None):
         self.root = Path(root) if root is not None else state_home() / "audit"
         self.cas = cas if cas is not None else Store()
+        env_anchor = os.environ.get("ORRERY_AUDIT_ANCHOR")
+        self.anchor = Path(anchor) if anchor else (Path(env_anchor) if env_anchor else None)
 
     @property
     def log_path(self) -> Path:
@@ -48,7 +58,39 @@ class AuditStore:
             f.write(line)
             f.flush()
             os.fsync(f.fileno())
+        if self.anchor is not None:
+            self._emit_head(this)
         return this
+
+    def _emit_head(self, self_hash: str) -> None:
+        """Append the new head (seq + self) to the external anchor, best-effort. A failed emit must not
+        fail the action; it only means this head is not yet anchored (verify treats newer-than-anchor
+        entries as benign, so the sole exposure is the same crash window an unanchored newest entry has)."""
+        try:
+            self.anchor.parent.mkdir(parents=True, exist_ok=True)
+            with open(self.anchor, "a", encoding="utf-8") as f:
+                f.write(_canon({"seq": len(self.entries()), "self": self_hash}) + "\n")
+                f.flush()
+                os.fsync(f.fileno())
+        except OSError:
+            pass
+
+    def expected_head(self) -> str | None:
+        """The last head self-hash recorded in the external anchor, or None if unset/empty."""
+        if self.anchor is None or not self.anchor.exists():
+            return None
+        last = None
+        with open(self.anchor, encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line:
+                    last = json.loads(line).get("self")
+        return last
+
+    def head(self) -> dict | None:
+        """The current on-disk head: {seq, self}, or None if the log is empty. What an anchor captures."""
+        es = self.entries()
+        return {"seq": len(es), "self": es[-1].get("self")} if es else None
 
     def _last_self(self) -> str | None:
         last = None
@@ -110,8 +152,9 @@ class AuditStore:
 
     # --- verify (re-walk the chain and re-check every content-address) -------------------------
 
-    def verify(self) -> tuple[bool, str]:
+    def verify(self, expect_head: str | None = None) -> tuple[bool, str]:
         prev = None
+        selves: list[str] = []
         for i, e in enumerate(self.entries()):
             body = {k: v for k, v in e.items() if k != "self"}
             expect = hash_bytes(_canon(body).encode("utf-8"))
@@ -123,4 +166,16 @@ class AuditStore:
                 if h and not self.cas.has(h):
                     return False, f"entry {i}: referenced body {h} is missing from the store"
             prev = e.get("self")
-        return True, "chain intact"
+            selves.append(e["self"])
+
+        n = len(selves)
+        want = expect_head or self.expected_head()
+        if want:
+            if want not in selves:
+                return False, (f"anchored head {want[:12]} is not in the log: the tail was "
+                               f"truncated or rewritten below the anchor")
+            newer = n - 1 - selves.index(want)
+            tail = "tail complete" if newer == 0 else f"tail complete to the anchor, {newer} newer not yet anchored"
+            return True, f"{n} entries, chain consistent, head anchored ({want[:12]}); {tail}"
+        return True, (f"{n} entries, chain internally consistent; no head anchor set, "
+                      f"so a truncated tail would not be detected")

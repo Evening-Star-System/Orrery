@@ -48,7 +48,9 @@ def test_show_unknown_id_fails(seeded, capsys):
 
 def test_verify_ok(seeded, capsys):
     assert audit(["verify"]) == 0
-    assert "intact" in capsys.readouterr().out
+    out = capsys.readouterr().out
+    # honest with no anchor: says the chain is consistent AND that a truncated tail would slip by
+    assert "chain internally consistent" in out and "truncated tail would not be detected" in out
 
 
 def test_verify_fails_after_tamper(seeded, tmp_path, capsys):

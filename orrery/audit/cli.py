@@ -59,7 +59,10 @@ def main(argv: list[str]) -> int:
     p_show.add_argument("id", help="a record id or a unique prefix of it")
     p_show.add_argument("--json", action="store_true")
 
-    sub.add_parser("verify", help="re-check the chain and content-addresses (exit non-zero on a break)")
+    p_ver = sub.add_parser("verify", help="re-check the chain and content-addresses (exit non-zero on a break)")
+    p_ver.add_argument("--expect-head", default=None,
+                       help="a head self-hash the tail must still contain (else a truncated tail is a break); "
+                            "default: the ORRERY_AUDIT_ANCHOR sink if set")
 
     p_exp = sub.add_parser("export", help="export the whole trail")
     p_exp.add_argument("--format", choices=["csv", "json"], default="json")
@@ -128,7 +131,7 @@ def main(argv: list[str]) -> int:
         return 0
 
     if args.action_cmd == "verify":
-        ok, msg = store.verify()
+        ok, msg = store.verify(expect_head=args.expect_head)
         print(f"audit: {msg}")
         return 0 if ok else 1
 

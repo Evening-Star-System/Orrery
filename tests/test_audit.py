@@ -83,3 +83,49 @@ def test_verify_fails_when_a_referenced_body_is_removed(tmp_path):
     s.cas._obj_path(bh).unlink()  # remove the body via the store's own path logic
     ok, msg = s.verify()
     assert not ok and "missing" in msg
+
+
+def test_truncating_the_tail_is_honest_without_an_anchor(tmp_path):
+    # With no anchor, a dropped newest entry leaves a consistent chain; verify does NOT flag it, but
+    # it SAYS so instead of claiming completeness it cannot prove.
+    s = _store(tmp_path)
+    PlanRecord.propose("recover", "/a", "plan a", "op", store=s)
+    PlanRecord.propose("recover", "/b", "plan b", "op", store=s)
+    lines = s.log_path.read_text().splitlines()
+    s.log_path.write_text(lines[0] + "\n")  # drop the newest entry
+    ok, msg = s.verify()
+    assert ok and "truncated tail would not be detected" in msg
+
+
+def test_expect_head_detects_a_truncated_tail(tmp_path):
+    s = _store(tmp_path)
+    PlanRecord.propose("recover", "/a", "plan a", "op", store=s)
+    PlanRecord.propose("recover", "/b", "plan b", "op", store=s)
+    head = s.head()["self"]
+    lines = s.log_path.read_text().splitlines()
+    s.log_path.write_text(lines[0] + "\n")  # drop the entry the anchored head names
+    ok, msg = s.verify(expect_head=head)
+    assert not ok and "truncated or rewritten" in msg
+
+
+def test_external_anchor_detects_a_truncated_tail(tmp_path):
+    anchor = tmp_path / "ext" / "anchor.jsonl"  # outside the log dir, an append-only sink
+    s = AuditStore(root=tmp_path / "audit", cas=Store(tmp_path / "cas"), anchor=anchor)
+    for x in "abc":
+        PlanRecord.propose("recover", f"/{x}", f"plan {x}", "op", store=s)
+    assert s.verify()[0]  # anchored head matches the on-disk tail
+    lines = s.log_path.read_text().splitlines()
+    s.log_path.write_text("\n".join(lines[:-1]) + "\n")  # truncate the log; the external anchor is untouched
+    ok, msg = s.verify()
+    assert not ok and "truncated or rewritten" in msg
+
+
+def test_entries_newer_than_the_anchor_are_benign(tmp_path):
+    # The crash window (append succeeded, head not yet anchored) must not be a false positive: entries
+    # PAST the anchored head are fine.
+    s = _store(tmp_path)
+    PlanRecord.propose("recover", "/a", "plan a", "op", store=s)
+    early = s.head()["self"]
+    PlanRecord.propose("recover", "/b", "plan b", "op", store=s)  # newer than the anchor
+    ok, msg = s.verify(expect_head=early)
+    assert ok and "newer not yet anchored" in msg
