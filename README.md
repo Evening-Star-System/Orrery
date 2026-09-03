@@ -44,6 +44,12 @@ is report-only: it measures and reports, it does not change your boxes.
 next to your other metrics and alerts through Alertmanager. A ready-to-import dashboard, alert rules, and a
 setup guide are in `integrations/grafana/`.
 
+## The operating standard
+
+One consistent way to run every project in a fleet, any language, any CI host: declare, prove, gate,
+roll up. Learn it once, apply it everywhere, and run every step by hand. See
+[docs/operating-standard.md](docs/operating-standard.md).
+
 ## The reconciler
 
 The core generalizes one idea, borrowed from the way good conformance systems treat a rule: a thing
