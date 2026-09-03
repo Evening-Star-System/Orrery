@@ -64,6 +64,11 @@ pluggable:
 | `secret-edges` | the secret-to-consumer graph holds (value-blind: never reads a secret value) |
 | `floors` | counts stay within declared floors and ceilings |
 | `managed-settings` | the enforcement layer stays root-owned and unwritable, so the rules cannot be quietly disabled |
+| `behavior-lock` | shipped behaviors stay locked to their recorded goldens (a regression fails the gate) |
+| `content-address` | protected artifacts stay byte-exact to their recorded content-address |
+| `memory-headroom` | a slice can still reclaim, and its wall is reachable |
+| `session-ownership` | units own the process trees they declare |
+| `vault-capability` | declared credentials can still do what their consumers need |
 
 Findings carry a severity (ok, info, warn, drift, fail); the run exits non-zero on drift so a cron or
 CI can alert.

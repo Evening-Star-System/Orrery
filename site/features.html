@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Features and the Reconciler's Six Checks | ESS Orrery</title>
+<title>Features and the Reconciler's Checks | ESS Orrery</title>
 <meta name="description" content="ESS Orrery's six reconciler checks and the tenets they enforce, plus an honest build status: what ships today, what is in progress, and what is not built.">
-<meta property="og:title" content="Features and the Reconciler's Six Checks | ESS Orrery">
+<meta property="og:title" content="Features and the Reconciler's Checks | ESS Orrery">
 <meta property="og:description" content="ESS Orrery's six reconciler checks and the tenets they enforce, plus an honest build status: what ships today, what is in progress, and what is not built.">
 <meta property="og:type" content="website">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -16,7 +16,7 @@
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://orrery.eveningstar.app/og.png">
-<meta name="twitter:title" content="Features and the Reconciler's Six Checks | ESS Orrery">
+<meta name="twitter:title" content="Features and the Reconciler's Checks | ESS Orrery">
 <meta name="twitter:description" content="ESS Orrery's six reconciler checks and the tenets they enforce, plus an honest build status: what ships today, what is in progress, and what is not built.">
 <link rel="canonical" href="https://orrery.eveningstar.app/features">
 <style>
@@ -423,14 +423,14 @@
   <section class="wrap page-hero">
     <span class="eyebrow rise">Why Orrery</span>
     <h1 class="rise">What no single tool<br><span class="thin">ships together.</span></h1>
-    <p class="lede rise">Conformance for a plain VPS. A secret-to-consumer graph. Governed autonomy enforced in code. An install that proves itself. Four things a solo or small operator needs together, that no single existing tool ships as one.</p>
+    <p class="lede rise">Conformance for a plain VPS. A secret-to-consumer graph. Governed autonomy enforced in code. An install that proves itself. One operating standard for a whole fleet. Five things a solo or small operator needs together, that no single existing tool ships as one.</p>
     <div class="cmd rise">
       <span class="p" aria-hidden="true">$</span>
       <code>pip install ess-orrery &amp;&amp; ess-orrery doctor</code>
       <button class="cp" id="copyBtn" aria-label="Copy install command">Copy</button>
     </div>
     <div class="cta-row rise">
-      <a class="btn btn-p" href="#checks">See the six checks</a>
+      <a class="btn btn-p" href="#checks">See the checks</a>
       <a class="btn btn-s" href="#status">Read the honest status</a>
     </div>
   </section>
@@ -463,6 +463,11 @@
           <h3>An install that proves itself</h3>
           <p>ess-orrery doctor verifies the installation actually stands, then the reconciler keeps watching afterward, so nothing is trusted blind a month later.</p>
         </div>
+        <div class="fcard">
+          <span class="fk">05</span>
+          <h3>One way to run every project</h3>
+          <p>Declare, prove, gate, roll up: the same four beats on every stack and every CI host, so a whole fleet is held to one standard. A hard-won behavior can be locked so it never silently regresses.</p>
+        </div>
       </div>
     </div>
   </section>
@@ -471,8 +476,8 @@
     <div class="wrap">
       <div class="sec-head sec-top rise">
         <span class="idx">II</span>
-        <h2>Six checks, and they are the whole spine.</h2>
-        <p class="sec-sub">The reconciler holds each fact as a declaration plus a probe, and runs the probe continuously: a thing is not "declared", it is declared and its probe passes. Findings carry a severity from OK through INFO and WARN up to DRIFT, the core signal, disagreement between declared and observed, and FAIL, a broken invariant. All six ship today, read-only: they measure and report, they never change a box.</p>
+        <h2>Eleven checks, and they are the whole spine.</h2>
+        <p class="sec-sub">The reconciler holds each fact as a declaration plus a probe, and runs the probe continuously: a thing is not "declared", it is declared and its probe passes. Findings carry a severity from OK through INFO and WARN up to DRIFT, the core signal, disagreement between declared and observed, and FAIL, a broken invariant. All eleven ship today, read-only: they measure and report, they never change a box.</p>
       </div>
       <div class="grid c3 rise">
         <div class="fcard">
@@ -509,6 +514,36 @@
           <span class="fk">managed-settings</span>
           <h3>The guard cannot be moved</h3>
           <p>Every enforcement file must stay root-owned and no more writable than declared, so the rules that gate an AI operator's actions cannot be quietly loosened from inside. A file marked planned reports informational until it lands.</p>
+          <span class="status-line"><i aria-hidden="true"></i>Operational</span>
+        </div>
+        <div class="fcard">
+          <span class="fk">behavior-lock</span>
+          <h3>Behavior stays locked</h3>
+          <p>A hard-won behavior is captured as a golden and held there. Any later run whose output no longer matches the golden fails the gate, so a fixed bug or a shipped guarantee cannot silently regress. Floors and ceilings let a value improve without sliding back.</p>
+          <span class="status-line"><i aria-hidden="true"></i>Operational</span>
+        </div>
+        <div class="fcard">
+          <span class="fk">content-address</span>
+          <h3>Artifacts stay byte-exact</h3>
+          <p>A protected file is pinned to the content address of its known-good bytes. If the file drifts from that hash, the check flags it, so an artifact that must not change quietly cannot.</p>
+          <span class="status-line"><i aria-hidden="true"></i>Operational</span>
+        </div>
+        <div class="fcard">
+          <span class="fk">memory-headroom</span>
+          <h3>Headroom stays reachable</h3>
+          <p>A cgroup that must stay recoverable is checked so it can still reclaim memory and its ceiling is actually reachable, catching the case where a brake would stall a slice instead of letting a runaway die.</p>
+          <span class="status-line"><i aria-hidden="true"></i>Operational</span>
+        </div>
+        <div class="fcard">
+          <span class="fk">session-ownership</span>
+          <h3>Units own their processes</h3>
+          <p>A unit that declares it owns a process tree is checked to actually own it, so a service that has quietly lost the processes it should manage is caught before that gap bites.</p>
+          <span class="status-line"><i aria-hidden="true"></i>Operational</span>
+        </div>
+        <div class="fcard">
+          <span class="fk">vault-capability</span>
+          <h3>Credentials still work</h3>
+          <p>A declared credential is checked that it can still do what its consumers need, by capability, never by reading the secret, so a token that has gone stale or lost a permission is found before a job fails on it.</p>
           <span class="status-line"><i aria-hidden="true"></i>Operational</span>
         </div>
       </div>
@@ -552,7 +587,7 @@
       <div class="kanban rise">
         <div class="kcol">
           <div class="khead"><i aria-hidden="true"></i>Operational today<span class="kn">7</span></div>
-          <div class="kcard"><div class="kt"><span>reconciler</span><span class="kstate">Live</span></div><h3>Desired vs observed</h3><p>Six read-only checks; a fact is declared and its probe passes, continuously.</p></div>
+          <div class="kcard"><div class="kt"><span>reconciler</span><span class="kstate">Live</span></div><h3>Desired vs observed</h3><p>Eleven read-only checks; a fact is declared and its probe passes, continuously.</p></div>
           <div class="kcard"><div class="kt"><span>spine</span><span class="kstate">Live</span></div><h3>Curated memory, under git</h3><p>Replicated and restore-verified, not a folder of notes hoping to stay in sync.</p></div>
           <div class="kcard"><div class="kt"><span>guards</span><span class="kstate">Live</span></div><h3>Admission control, below the model</h3><p>Rules gate tool calls and operator actions in code and architecture, never asked of a model.</p></div>
           <div class="kcard"><div class="kt"><span>deck + cli</span><span class="kstate">Live</span></div><h3>The operator deck</h3><p>A themed terminal deck plus a strong CLI over the same engine.</p></div>
@@ -587,7 +622,7 @@
           <div class="tt">The core</div>
           <h3>ESS Orrery</h3>
           <div class="lic">AGPL-3.0-or-later</div>
-          <p>Free to run, study, and modify. Zero runtime dependencies, read-only, identity-free: the reconciler and its six checks, per-directory context isolation, a self-verifying install, the CLI, and the themed terminal deck.</p>
+          <p>Free to run, study, and modify. Zero runtime dependencies, read-only, identity-free: the reconciler and its eleven checks, per-directory context isolation, a self-verifying install, the CLI, and the themed terminal deck.</p>
         </div>
         <div class="tier">
           <div class="tt">The commercial layer</div>
