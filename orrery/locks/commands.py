@@ -127,6 +127,35 @@ def probe(manifest_path: str, results_path: str | None = None) -> tuple[int, lis
     return 0, messages
 
 
+def gate(manifest_path: str) -> tuple[int, list[str]]:
+    """The CI gate in one call: probe every lock, then adjudicate the observed values against the
+    goldens, and return a HARD exit code. 0 when every lock still holds (or there is no manifest yet);
+    non-zero when any lock regressed, breached its floor/ceiling, or could not be observed.
+
+    This reuses `probe` and the reconciler's behavior-lock check, so the directional compare
+    (eq / >= floor / <= ceiling) has a SINGLE source of truth and is never re-implemented. There is no
+    skip path and no operator-type branch: the verdict depends only on whether the locked behavior held.
+    """
+    if _read(manifest_path) is None:
+        return 0, [f"no {manifest_path}; nothing to gate"]
+    code, messages = probe(manifest_path)
+    if code != 0:
+        return code, messages  # e.g. the manifest is not valid TOML: block, do not pass
+
+    from ..reconciler.box import LocalBox
+    from ..reconciler.checks.behavior_lock import BehaviorLockCheck
+    from ..reconciler.model import CLEAN_CEILING, Severity
+
+    root = _root_of(manifest_path)
+    findings = BehaviorLockCheck().run({"repos": [{"root": root}]}, LocalBox())
+    worst = max((f.severity for f in findings), default=Severity.OK)
+    for f in findings:
+        messages.append(f"{f.severity.label:5} {f.subject}: {f.message}")
+    clean = worst <= CLEAN_CEILING
+    messages.append("GATE PASS" if clean else "GATE FAIL: a locked behavior regressed or could not be observed")
+    return (0 if clean else 1), messages
+
+
 def add(manifest_path: str, lock_id: str, command: str, why: str, capture_kind: str = "stdout-line") -> tuple[int, list[str]]:
     """Declare a new lock and capture its golden in one step, honoring the rule that a
     lock is declared and captured together. If the probe is not green the lock is left

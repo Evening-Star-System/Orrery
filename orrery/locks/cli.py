@@ -15,7 +15,7 @@ import sys
 from . import commands
 from .manifest import MANIFEST_NAME
 
-_USAGE = "ess-orrery lock <capture|probe|add> [args]"
+_USAGE = "ess-orrery lock <capture|probe|add|gate> [args]"
 
 
 def main(argv: list[str]) -> int:
@@ -34,6 +34,7 @@ def main(argv: list[str]) -> int:
     cap.add_argument("id", nargs="?", help="capture only this lock id (default: all)")
 
     sub.add_parser("probe", parents=[common], help="run all locks and write the results file for the gate")
+    sub.add_parser("gate", parents=[common], help="probe + adjudicate all locks; exit non-zero on any regression (the CI gate)")
 
     added = sub.add_parser("add", parents=[common], help="declare a lock and capture its golden in one step")
     added.add_argument("id", help="stable lock id")
@@ -47,6 +48,8 @@ def main(argv: list[str]) -> int:
         code, messages = commands.capture(args.manifest, only_id=args.id)
     elif args.action == "probe":
         code, messages = commands.probe(args.manifest)
+    elif args.action == "gate":
+        code, messages = commands.gate(args.manifest)
     elif args.action == "add":
         code, messages = commands.add(args.manifest, args.id, args.command, args.why, args.capture)
     else:

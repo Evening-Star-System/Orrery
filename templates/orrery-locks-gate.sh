@@ -1,14 +1,15 @@
 #!/bin/sh
-# orrery-locks-gate.sh: fail the build if a locked behavior regressed.
+# orrery-locks-gate.sh: the behavior-lock CI gate. Fail the build if a locked behavior regressed.
 #
-# Run from the repo root, in the project's own CI (the ratified posture: the consumer
-# runs its own probes, Orrery adjudicates). Any CI system can call this one script, so
-# the gate is not tied to a particular CI. Requires `ess-orrery` on PATH.
+# CI-agnostic: any CI system calls this one script from the repo root. It runs the single adjudicator
+# `ess-orrery lock gate` (probe + adjudicate + hard exit code). The compare logic lives in one place
+# (the tool), so this script never re-implements it.
 #
 #   sh scripts/orrery-locks-gate.sh [path/to/orrery-locks.toml]
 #
-# Exit 0 when every lock still matches its golden (or there are no locks yet); non-zero
-# when a lock regressed (FAIL) or a probe did not complete (WARN), which stops the build.
+# Exit 0 when every lock still holds (or there is no manifest yet); non-zero when a lock regressed or a
+# probe did not complete. It NEVER passes silently: if the adjudicator cannot be obtained, it exits 3
+# and blocks, because a gate that cannot run is a failed gate, not a skipped one.
 set -eu
 
 MANIFEST="${1:-orrery-locks.toml}"
@@ -17,22 +18,20 @@ if [ ! -f "$MANIFEST" ]; then
   exit 0
 fi
 
-# 1. Produce the observed values. The consumer runs its own probe commands here, where
-#    its fixtures and toolchain live, and writes orrery-locks.results.json.
-ess-orrery lock probe -m "$MANIFEST"
+# Obtain the adjudicator. Prefer an installed ess-orrery; else run it ephemerally with pipx; else
+# install it with pip. If none of these work, FAIL (exit 3), never skip.
+if command -v ess-orrery >/dev/null 2>&1; then
+  set -- ess-orrery
+elif command -v pipx >/dev/null 2>&1; then
+  set -- pipx run ess-orrery
+elif command -v python3 >/dev/null 2>&1 && python3 -m pip --version >/dev/null 2>&1; then
+  echo "orrery-locks: installing ess-orrery to run the gate ..."
+  python3 -m pip install --quiet --disable-pip-version-check ess-orrery >/dev/null 2>&1 \
+    || { echo "orrery-locks: GATE ERROR could not install ess-orrery; failing the build"; exit 3; }
+  set -- ess-orrery
+else
+  echo "orrery-locks: GATE ERROR no ess-orrery / pipx / python3+pip available to run the gate; failing the build"
+  exit 3
+fi
 
-# 2. Adjudicate observed against the committed goldens. root = "." keeps the profile
-#    path-portable: it resolves against the CI checkout, wherever that lands.
-PROFILE="$(mktemp)"
-trap 'rm -f "$PROFILE"' EXIT
-cat > "$PROFILE" <<'EOF'
-schema = 1
-box = "ci"
-[[checks]]
-id = "behavior-lock"
-[[checks.repos]]
-root = "."
-EOF
-
-# reconcile exits non-zero on the worst finding, so a regression fails the job.
-exec ess-orrery reconcile --profile "$PROFILE" --check behavior-lock
+exec "$@" lock gate -m "$MANIFEST"

@@ -75,3 +75,11 @@ def test_cli_render_forced_stack(tmp_path, capsys):
     assert standard_cli(["render-ci", str(tmp_path), "--host", "github", "--stack", "rust"]) == 0
     out = capsys.readouterr().out
     assert "cargo test" in out and "runs-on:" in out
+
+
+def test_prove_beats_are_hard_no_bypass_in_rendered_ci():
+    # a failing beat must block: no `|| true`, no continue-on-error, in either host
+    for render in (render_woodpecker, render_github):
+        out = render(resolve("node"))
+        assert "|| true" not in out
+        assert "continue-on-error" not in out
