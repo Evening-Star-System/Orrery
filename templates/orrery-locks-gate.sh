@@ -18,16 +18,20 @@ if [ ! -f "$MANIFEST" ]; then
   exit 0
 fi
 
-# Obtain the adjudicator. Prefer an installed ess-orrery; else run it ephemerally with pipx; else
-# install it with pip. If none of these work, FAIL (exit 3), never skip.
+# Obtain the adjudicator. Prefer an installed ess-orrery (pre-baking it in the CI image is the best
+# supply-chain posture and skips the install below entirely); else run/install a PINNED version, so a
+# compromised or breaking PyPI release cannot silently enter the gate. If none of these work, FAIL
+# (exit 3), never skip. Override ORRERY_VERSION to bump; unset it (ORRERY_VERSION=) to float.
+ORRERY_VERSION="${ORRERY_VERSION-0.1.1}"
+_spec="ess-orrery${ORRERY_VERSION:+==$ORRERY_VERSION}"
 if command -v ess-orrery >/dev/null 2>&1; then
   set -- ess-orrery
 elif command -v pipx >/dev/null 2>&1; then
-  set -- pipx run ess-orrery
+  set -- pipx run --spec "$_spec" ess-orrery
 elif command -v python3 >/dev/null 2>&1 && python3 -m pip --version >/dev/null 2>&1; then
-  echo "orrery-locks: installing ess-orrery to run the gate ..."
-  python3 -m pip install --quiet --disable-pip-version-check ess-orrery >/dev/null 2>&1 \
-    || { echo "orrery-locks: GATE ERROR could not install ess-orrery; failing the build"; exit 3; }
+  echo "orrery-locks: installing $_spec to run the gate ..."
+  python3 -m pip install --quiet --disable-pip-version-check "$_spec" >/dev/null 2>&1 \
+    || { echo "orrery-locks: GATE ERROR could not install $_spec; failing the build"; exit 3; }
   set -- ess-orrery
 else
   echo "orrery-locks: GATE ERROR no ess-orrery / pipx / python3+pip available to run the gate; failing the build"

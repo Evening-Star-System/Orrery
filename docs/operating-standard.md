@@ -17,7 +17,9 @@ Every project, any stack, runs the same loop:
 3. **Gate** hard: CI runs the prove step and BLOCKS the merge or deploy on any failure. A red guardrail
    stops the change. There is no "warn and keep going" for a declared rule.
 4. **Roll up**: one command reconciles every project into a single view, so the whole fleet's guardrail
-   status is legible at a glance.
+   status is legible at a glance. The roll-up is a MONITOR: it reflects what each project's CI last
+   recorded, so a stale or hand-edited result is only ever as trustworthy as that project's CI. The hard
+   gate that a change must pass is beat 3, in the project's own CI, which re-runs the checks every time.
 
 The loop is the same everywhere (the trunk). Only the commands differ by stack (the limbs), and those
 live in one small table so adding a language is one entry, not a rewrite.
