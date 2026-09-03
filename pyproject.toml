@@ -24,3 +24,7 @@ version = { attr = "orrery.__version__" }
 
 [tool.setuptools.packages.find]
 include = ["orrery*"]
+
+[tool.setuptools.package-data]
+# Ship the operating-standard stack profiles with the wheel (CI is rendered in code).
+"orrery.standard" = ["data/*.toml"]

@@ -1,0 +1,46 @@
+# Stack profiles: the per-stack commands the canonical CI runs. One trunk (the four-beat loop and the
+# CI templates), many limbs (these commands). Detection is first-match-wins in the order below, by the
+# `detect` file. Adding a stack is one new block; the templates and the engine do not change. A project
+# may override any command in its own layer for a real, recorded exception.
+#
+# Beats a profile can define: setup, lint, test, checks (the project's own aggregate check script),
+# build. Any beat left out is skipped. The lock gate (scripts/orrery-locks-gate.sh) is added by the
+# renderer for every stack, so a declared behavior-lock is always gated.
+
+[flutter]
+detect = "pubspec.yaml"
+image  = "ghcr.io/cirruslabs/flutter:stable"
+setup  = "flutter pub get"
+lint   = "flutter analyze --no-pub --no-fatal-infos"
+test   = "flutter test --no-pub"
+build  = "flutter build apk --release --no-pub"
+
+[rust]
+detect = "Cargo.toml"
+image  = "rust:latest"
+setup  = "cargo fetch"
+lint   = "cargo clippy --all-targets --all-features -- -D warnings"
+test   = "cargo test --all"
+build  = "cargo build --release"
+
+[go]
+detect = "go.mod"
+image  = "golang:latest"
+lint   = "go vet ./..."
+test   = "go test ./..."
+build  = "go build ./..."
+
+[node]
+detect = "package.json"
+image  = "node:22"
+setup  = "npm ci"
+lint   = "npm run lint --if-present"
+test   = "npm test --if-present"
+checks = "npm run check --if-present"
+build  = "npm run build --if-present"
+
+[generic]
+detect = ""
+image  = "debian:stable-slim"
+test   = "make test"
+build  = "make build"
