@@ -10,20 +10,24 @@ same sha256 content-addressing the integrity store already uses.
 The chain proves nobody can alter, reorder, or mid-delete an entry without rewriting every later hash.
 It cannot, on its own, prove the TAIL is complete: lopping off the newest entries leaves a shorter but
 consistent chain. Detecting that needs an anchor the actor cannot retro-edit. This store emits the head
-(seq + self) to `ORRERY_AUDIT_ANCHOR` when set (point it at an append-only sink outside the log's own
-trust domain), and `verify` fails if an anchored head is no longer in the log. With no anchor set,
-`verify` is internally honest and SAYS a truncated tail would not be detected.
+(seq + self) to an append-only sink outside the log's own trust domain, and `verify` fails if an
+anchored head is no longer in the log. The sink is resolved, highest precedence first: an explicit
+`anchor=` argument, the `ORRERY_AUDIT_ANCHOR` env var, then `settings.toml` `[audit].anchor` (the
+persistent per-operator default). With no anchor set, `verify` is internally honest and SAYS a truncated
+tail would not be detected.
 """
 from __future__ import annotations
 
 import json
 import os
+import sys
 from pathlib import Path
 
-from ..home import ensure_dir, state_home
+from ..home import ensure_dir, read_settings, state_home
 from ..integrity.store import Store, hash_bytes
 
 _LOG = "log.jsonl"
+_warned_anchors: set[str] = set()  # warn once per process about a sink we cannot write
 
 
 def _canon(d: dict) -> str:
@@ -36,8 +40,18 @@ class AuditStore:
                  anchor: Path | str | None = None):
         self.root = Path(root) if root is not None else state_home() / "audit"
         self.cas = cas if cas is not None else Store()
+        self.anchor = self._resolve_anchor(anchor)
+
+    @staticmethod
+    def _resolve_anchor(explicit: Path | str | None) -> Path | None:
+        """explicit arg > ORRERY_AUDIT_ANCHOR env > settings.toml [audit].anchor > none."""
+        if explicit:
+            return Path(explicit)
         env_anchor = os.environ.get("ORRERY_AUDIT_ANCHOR")
-        self.anchor = Path(anchor) if anchor else (Path(env_anchor) if env_anchor else None)
+        if env_anchor:
+            return Path(env_anchor)
+        configured = (read_settings().get("audit") or {}).get("anchor")
+        return Path(configured) if configured else None
 
     @property
     def log_path(self) -> Path:
@@ -72,8 +86,12 @@ class AuditStore:
                 f.write(_canon({"seq": len(self.entries()), "self": self_hash}) + "\n")
                 f.flush()
                 os.fsync(f.fileno())
-        except OSError:
-            pass
+        except OSError as exc:
+            key = str(self.anchor)
+            if key not in _warned_anchors:  # once per process, so a bad sink is noticed, not silent
+                _warned_anchors.add(key)
+                print(f"orrery audit: could not write the head anchor {key} ({exc.__class__.__name__}); "
+                      f"the tamper-evident tail is unprotected until this is fixed", file=sys.stderr)
 
     def expected_head(self) -> str | None:
         """The last head self-hash recorded in the external anchor, or None if unset/empty."""

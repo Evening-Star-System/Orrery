@@ -11,6 +11,13 @@ from orrery.audit.cli import main as audit
 from orrery.audit.record import PlanRecord
 
 
+@pytest.fixture(autouse=True)
+def _isolate_home(tmp_path_factory, monkeypatch):
+    """Hermetic by default: no real settings.toml, no stray anchor env. Tests override as needed."""
+    monkeypatch.setenv("ORRERY_HOME", str(tmp_path_factory.mktemp("home")))
+    monkeypatch.delenv("ORRERY_AUDIT_ANCHOR", raising=False)
+
+
 @pytest.fixture()
 def seeded(tmp_path, monkeypatch):
     monkeypatch.setenv("ORRERY_HOME", str(tmp_path))

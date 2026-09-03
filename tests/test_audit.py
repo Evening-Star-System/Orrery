@@ -3,9 +3,19 @@
 Pins the lifecycle and, above all, the tamper-evidence: a mutated past entry, a broken chain, or a
 missing referenced body must all make verify() fail. That is what closes repudiation.
 """
+import pytest
+
 from orrery.audit.record import PlanRecord
 from orrery.audit.store import AuditStore
 from orrery.integrity.store import Store
+
+
+@pytest.fixture(autouse=True)
+def _isolate_home(tmp_path_factory, monkeypatch):
+    """Never let a unit test read this box's real settings.toml or a stray anchor env var. A test that
+    wants a specific home or anchor overrides these afterward (its monkeypatch call wins by order)."""
+    monkeypatch.setenv("ORRERY_HOME", str(tmp_path_factory.mktemp("home")))
+    monkeypatch.delenv("ORRERY_AUDIT_ANCHOR", raising=False)
 
 
 def _store(tmp_path):
@@ -129,3 +139,47 @@ def test_entries_newer_than_the_anchor_are_benign(tmp_path):
     PlanRecord.propose("recover", "/b", "plan b", "op", store=s)  # newer than the anchor
     ok, msg = s.verify(expect_head=early)
     assert ok and "newer not yet anchored" in msg
+
+
+def test_anchor_resolves_from_settings_toml(tmp_path, monkeypatch):
+    # The persistent per-operator default: [audit].anchor in settings.toml, no env, no explicit arg.
+    from orrery.home import write_settings
+
+    monkeypatch.setenv("ORRERY_HOME", str(tmp_path / "home"))
+    anchor = tmp_path / "ext" / "anchor.jsonl"
+    write_settings({"audit": {"anchor": str(anchor)}})
+    s = AuditStore(root=tmp_path / "audit", cas=Store(tmp_path / "cas"))
+    assert s.anchor == anchor
+    for x in "ab":
+        PlanRecord.propose("recover", f"/{x}", f"p{x}", "op", store=s)
+    assert anchor.exists() and s.verify()[0]  # emits to the configured sink and verifies against it
+
+
+def test_env_anchor_overrides_settings(tmp_path, monkeypatch):
+    from orrery.home import write_settings
+
+    monkeypatch.setenv("ORRERY_HOME", str(tmp_path / "home"))
+    write_settings({"audit": {"anchor": str(tmp_path / "from_settings.jsonl")}})
+    monkeypatch.setenv("ORRERY_AUDIT_ANCHOR", str(tmp_path / "from_env.jsonl"))
+    s = AuditStore(root=tmp_path / "audit", cas=Store(tmp_path / "cas"))
+    assert s.anchor == tmp_path / "from_env.jsonl"
+
+
+def test_explicit_anchor_overrides_env(tmp_path, monkeypatch):
+    monkeypatch.setenv("ORRERY_AUDIT_ANCHOR", str(tmp_path / "env.jsonl"))
+    s = AuditStore(root=tmp_path / "audit", cas=Store(tmp_path / "cas"), anchor=tmp_path / "explicit.jsonl")
+    assert s.anchor == tmp_path / "explicit.jsonl"
+
+
+def test_emit_failure_warns_once_and_still_records(tmp_path, capsys):
+    import orrery.audit.store as store_mod
+
+    store_mod._warned_anchors.clear()
+    blocker = tmp_path / "blocker"
+    blocker.write_text("x")  # a FILE where the anchor's parent dir would go, so the emit mkdir fails
+    s = AuditStore(root=tmp_path / "audit", cas=Store(tmp_path / "cas"), anchor=blocker / "anchor.jsonl")
+    PlanRecord.propose("recover", "/a", "p", "op", store=s)
+    PlanRecord.propose("recover", "/b", "p", "op", store=s)
+    err = capsys.readouterr().err
+    assert err.count("could not write the head anchor") == 1  # warned once, not per action
+    assert [r["action"] for r in s.records()] == ["recover", "recover"]  # the actions still recorded
