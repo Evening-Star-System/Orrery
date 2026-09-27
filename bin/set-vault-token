@@ -2,7 +2,9 @@
 """set-vault-token: install a vault token into an operator env file, SAFELY.
 
 Reads the new token on STDIN (never argv, so it never appears in ps or shell history):
-    printf '%s' "$TOKEN" | set-vault-token [--env /root/.openbao-operator.env] [--no-verify]
+    printf '%s' "$TOKEN" | set-vault-token [--env <operator-env>] [--no-verify]
+
+The env file path defaults to $ORRERY_OPERATOR_ENV (or `openbao-operator.env` if unset).
 
 WHY THIS EXISTS. Hand-rolled `sed -i 's|^BAO_TOKEN=.*|BAO_TOKEN=new|'` has now failed
 twice in the same way: the operator env line is `export BAO_TOKEN=`, so an anchored
@@ -28,7 +30,7 @@ PROBE = "vault-credential-probe"
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--env", default="/root/.openbao-operator.env")
+    ap.add_argument("--env", default=os.environ.get("ORRERY_OPERATOR_ENV", "openbao-operator.env"))
     ap.add_argument("--key", default="BAO_TOKEN")
     ap.add_argument("--no-verify", action="store_true")
     a = ap.parse_args()

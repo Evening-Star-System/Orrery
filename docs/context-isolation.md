@@ -10,8 +10,8 @@ context per working directory instead.
   digest. This is the shared, cross-cutting operational state.
 - **PROJECT scope** (cwd under `<projects_root>/<bucket>/<project>`): load ONLY that project's own
   state. Never another project's, never the ops digest.
-- **Ethos and standing rules** are injected separately by the standing-rules hook on every prompt, so
-  the context resolver stays focused purely on scoped state.
+- **Ethos and standing rules** are injected separately by a SessionStart/prompt context hook on every
+  prompt, so the context resolver stays focused purely on scoped state.
 
 Each project's state lives in the project, in priority order:
 1. a curated per-project digest at `<project>/.dev/DIGEST.md` (the per-project equivalent of the ops

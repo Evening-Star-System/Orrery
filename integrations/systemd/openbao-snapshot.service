@@ -9,4 +9,4 @@ Wants=network-online.target
 
 [Service]
 Type=oneshot
-ExecStart=/root/openbao-snapshot.sh
+ExecStart=/usr/local/bin/openbao-snapshot.sh
