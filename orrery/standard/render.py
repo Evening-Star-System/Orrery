@@ -70,7 +70,19 @@ def render_github(cfg: dict, runs_on: str = "ubuntu-latest") -> str:
     return "\n".join(lines) + "\n"
 
 
-def render_ci(cfg: dict, host: str) -> str:
+def _in_workdir(cfg: dict, workdir: str | None) -> dict:
+    """Prefix ONLY the stack beats (setup/lint/test/checks and build) with `cd <workdir> && `, for a
+    repo whose package lives in a subdirectory. The hygiene and lock gates are constants rendered at
+    the repo root (their scripts live there and the hygiene scan spans the whole tree), so they are
+    untouched. No workdir returns cfg unchanged."""
+    if not workdir:
+        return cfg
+    return {**cfg, **{b: f"cd {workdir} && {cfg[b]}"
+                      for b in (*BEATS, "build") if cfg.get(b)}}
+
+
+def render_ci(cfg: dict, host: str, workdir: str | None = None) -> str:
+    cfg = _in_workdir(cfg, workdir)
     if host == "woodpecker":
         return render_woodpecker(cfg)
     if host in ("github", "gha", "github-actions"):

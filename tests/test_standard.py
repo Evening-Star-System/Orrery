@@ -7,8 +7,16 @@ build runs on main only; and unknown inputs fail loudly rather than silently.
 import pytest
 
 from orrery.standard.cli import main as standard_cli
-from orrery.standard.profiles import detect, load_profiles, resolve
+from orrery.standard.profiles import detect, load_profiles, read_declaration, resolve
 from orrery.standard.render import render_ci, render_github, render_woodpecker
+
+
+def _declare(root, body):
+    """Write a project [standard] declaration into .dev/orrery.profile.toml and return the root."""
+    d = root / ".dev"
+    d.mkdir(parents=True, exist_ok=True)
+    (d / "orrery.profile.toml").write_text(body)
+    return root
 
 
 def _mk(tmp_path, name):
@@ -102,3 +110,81 @@ def test_prove_beats_are_hard_no_bypass_in_rendered_ci():
         out = render(resolve("node"))
         assert "|| true" not in out
         assert "continue-on-error" not in out
+
+
+# --- the python limb -------------------------------------------------------
+
+def test_detect_python_by_pyproject(tmp_path):
+    assert detect(_mk(tmp_path, "pyproject.toml")) == "python"
+
+
+def test_python_profile_carries_pytest_beats():
+    p = load_profiles()
+    cfg = resolve("python", p)
+    assert cfg["test"] == "pytest"
+    assert "pip install -e ." in cfg["setup"] and "pytest" in cfg["setup"]
+    assert cfg.get("lint") is None and cfg.get("build") is None  # optional beats, skipped
+
+
+# --- the subdir declaration ------------------------------------------------
+
+def test_read_declaration_present(tmp_path):
+    _declare(tmp_path, '[standard]\nstack = "python"\nworkdir = "governed-autonomy"\n')
+    d = read_declaration(tmp_path)
+    assert d == {"stack": "python", "workdir": "governed-autonomy"}
+
+
+def test_read_declaration_absent_returns_empty(tmp_path):
+    assert read_declaration(tmp_path) == {}
+
+
+def test_read_declaration_no_standard_table_returns_empty(tmp_path):
+    _declare(tmp_path, 'box = "x"\n')  # a profile with no [standard] table
+    assert read_declaration(tmp_path) == {}
+
+
+def test_read_declaration_broken_toml_returns_empty(tmp_path):
+    _declare(tmp_path, "this is = = not toml [[[")
+    assert read_declaration(tmp_path) == {}  # a bad operator file must not brick foldin
+
+
+def test_detect_honors_declared_stack_over_root_files(tmp_path):
+    # a package.json at root would detect node, but the declaration forces python
+    _mk(tmp_path, "package.json")
+    _declare(tmp_path, '[standard]\nstack = "python"\n')
+    assert detect(tmp_path) == "python"
+
+
+# --- rendering with a workdir ----------------------------------------------
+
+def test_render_workdir_prefixes_stack_beats_not_gates_both_hosts():
+    for render_host in ("woodpecker", "github"):
+        out = render_ci(resolve("python"), render_host, workdir="governed-autonomy")
+        # stack beats run in the subdir
+        assert "cd governed-autonomy && pip install -e ." in out
+        assert "cd governed-autonomy && pytest" in out
+        # the gates stay at the repo root, never prefixed
+        assert "sh scripts/orrery-hygiene-gate.sh" in out
+        assert "cd governed-autonomy && sh scripts/orrery-hygiene-gate.sh" not in out
+        assert "cd governed-autonomy && if [ -f scripts/orrery-locks-gate.sh ]" not in out
+
+
+def test_render_no_workdir_is_unchanged():
+    assert render_ci(resolve("python"), "github") == render_ci(resolve("python"), "github", workdir=None)
+
+
+def test_render_workdir_prefixes_build_beat():
+    # build is a stack beat too: it must move into the workdir when one is declared
+    out = render_ci(resolve("flutter"), "woodpecker", workdir="app")
+    assert "cd app && flutter build" in out
+
+
+def test_cli_render_honors_declaration_workdir(tmp_path, capsys):
+    _mk(tmp_path, "package.json")  # would be node, but the declaration forces python + workdir
+    _declare(tmp_path, '[standard]\nstack = "python"\nworkdir = "sub"\n')
+    assert standard_cli(["detect", str(tmp_path)]) == 0
+    assert capsys.readouterr().out.strip() == "python"
+    assert standard_cli(["render-ci", str(tmp_path), "--host", "github"]) == 0
+    out = capsys.readouterr().out
+    assert "cd sub && pytest" in out
+    assert "sh scripts/orrery-hygiene-gate.sh" in out  # gate still at root

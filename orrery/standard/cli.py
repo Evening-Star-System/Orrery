@@ -11,7 +11,7 @@ from __future__ import annotations
 import argparse
 import sys
 
-from .profiles import detect, load_profiles, resolve
+from .profiles import detect, load_profiles, read_declaration, resolve
 from .render import render_ci
 
 _USAGE = "ess-orrery standard <detect|render-ci> ..."
@@ -38,12 +38,13 @@ def main(argv: list[str]) -> int:
         args = parser.parse_args(rest)
 
         profiles = load_profiles()
+        declaration = read_declaration(args.project_dir)
         stack = detect(args.project_dir, profiles) if args.stack == "auto" else args.stack
         cfg = resolve(stack, profiles)
         if not cfg:
             print(f"standard: unknown stack {stack!r}", file=sys.stderr)
             return 2
-        sys.stdout.write(render_ci(cfg, args.host))
+        sys.stdout.write(render_ci(cfg, args.host, workdir=declaration.get("workdir")))
         return 0
 
     print(_USAGE, file=sys.stderr)

@@ -39,6 +39,12 @@ test   = "npm test --if-present"
 checks = "npm run check --if-present"
 build  = "npm run build --if-present"
 
+[python]
+detect = "pyproject.toml"
+image  = "python:3.12-slim"
+setup  = "pip install -e . && pip install pytest"
+test   = "pytest"
+
 [generic]
 detect = ""
 image  = "debian:stable-slim"
