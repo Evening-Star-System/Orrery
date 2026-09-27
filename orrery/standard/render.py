@@ -1,19 +1,26 @@
 """Render a project's CI file from its resolved stack profile, for either CI host.
 
-Both hosts emit the SAME beats in the SAME order: the prove beats the stack defines (setup, lint,
-test, checks), then the lock gate (always, so a declared behavior-lock is always enforced), then a
-build on main only. No stack logic lives here; the beats come entirely from the profile. Every beat
-is a hard gate: any non-zero exit stops the pipeline, because both hosts fail fast on a failed step.
+Both hosts emit the SAME beats in the SAME order: the hygiene gate first (always, so a leak fails
+fast before anything else runs), then the prove beats the stack defines (setup, lint, test, checks),
+then the lock gate (always, so a declared behavior-lock is always enforced), then a build on main
+only. No stack logic lives here; the beats come entirely from the profile. Every beat is a hard gate:
+any non-zero exit stops the pipeline, because both hosts fail fast on a failed step.
 """
 from __future__ import annotations
 
 from .profiles import BEATS
 
 _HEADER = (
-    "# Canonical operating standard. Beats: prove (lint, test, checks, locks), gate (any failure\n"
-    "# blocks the merge/deploy), build on main. Generated from stack-profiles.toml by\n"
+    "# Canonical operating standard. Beats: prove (hygiene, lint, test, checks, locks), gate (any\n"
+    "# failure blocks the merge/deploy), build on main. Generated from stack-profiles.toml by\n"
     "# `ess-orrery standard render-ci`. The same beats run on every stack and every CI host.\n"
 )
+
+# The hygiene gate runs the shipped, CI-agnostic script UNCONDITIONALLY. Unlike the lock gate it is
+# not `if -f` skippable: it is shipped by adoption and must always run, so a repo that drops the
+# script fails the build (a missing leak-gate is a failed gate, not a skipped one). It runs first so
+# a leak (private IPs, home-root paths, private keys, secret tokens) fails fast before other work.
+_HYGIENE_CMD = "sh scripts/orrery-hygiene-gate.sh"
 
 # The lock gate runs the shipped, CI-agnostic script if the repo declares locks; it no-ops cleanly
 # when there is no manifest, so it is safe to include unconditionally and it hard-fails on a regression.
@@ -21,8 +28,10 @@ _LOCK_CMD = "if [ -f scripts/orrery-locks-gate.sh ]; then sh scripts/orrery-lock
 
 
 def prove_beats(cfg: dict) -> list[tuple[str, str]]:
-    """The ordered (label, command) prove beats present for this stack, plus the lock gate."""
-    beats = [(b, cfg[b]) for b in BEATS if cfg.get(b)]
+    """The ordered (label, command) prove beats: the hygiene gate first, then this stack's beats,
+    then the lock gate."""
+    beats = [("hygiene", _HYGIENE_CMD)]
+    beats += [(b, cfg[b]) for b in BEATS if cfg.get(b)]
     beats.append(("locks", _LOCK_CMD))
     return beats
 

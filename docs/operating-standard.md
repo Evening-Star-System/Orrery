@@ -11,9 +11,11 @@ Every project, any stack, runs the same loop:
 
 1. **Declare** what the project agrees to: a small profile that adopts a shared set of rules. Conduct
    rules are held by people and process; the one machine-checked rule is the behavior lock.
-2. **Prove** the behavior still holds: run the project's own checks. That means lint, then tests, then
-   any project-specific checks, then the behavior-lock gate. Native tests stay the deep source of truth
-   for a project's behavior; the lock adds a small, uniform guardrail on top.
+2. **Prove** the behavior still holds: run the project's own checks. That means the hygiene gate first
+   (a leak-gate that fails fast on content wrong in any repo: private IPs, absolute home-root paths,
+   private-key blocks, secret-token shapes), then lint, then tests, then any project-specific checks,
+   then the behavior-lock gate. Native tests stay the deep source of truth for a project's behavior;
+   the hygiene and lock gates add small, uniform guardrails on top.
 3. **Gate** hard: CI runs the prove step and BLOCKS the merge or deploy on any failure. A red guardrail
    stops the change. There is no "warn and keep going" for a declared rule.
 4. **Roll up**: one command reconciles every project into a single view, so the whole fleet's guardrail
@@ -84,9 +86,14 @@ decisions that matter: re-locks, exceptions, and any go-live. Automation propose
 ## Adopting the standard
 
 - A new project is scaffolded onto the standard from the start: it is born with a profile, a lock
-  manifest, the gate script, and the rendered CI for its stack.
+  manifest, the gate scripts (both the hygiene gate and the lock gate), and the rendered CI for its
+  stack. The gate scripts are shipped by copying them from this repo's `templates/`
+  (`templates/orrery-hygiene-gate.sh` and `templates/orrery-locks-gate.sh`) into the project's
+  `scripts/`, the same source-of-truth copy for every project.
 - An existing project is folded in without losing what it already has: its own tests and checks stay,
-  and the canonical CI runs them plus the lock gate. An existing, hand-tuned CI is never overwritten.
+  and the canonical CI runs them plus the hygiene gate and the lock gate. An existing, hand-tuned CI
+  is never overwritten. The hygiene gate is not `if -f` skippable: because it is shipped by adoption,
+  the rendered CI runs it unconditionally, so a project that drops the script fails the build.
 - A starter set of conduct rules a team can adopt and edit lives in `rulesets/starter.ruleset.toml`.
 
 Keep the fewest moving parts that still protect the behavior. Native tests are the deep truth; the lock

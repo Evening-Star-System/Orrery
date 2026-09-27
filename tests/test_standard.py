@@ -39,8 +39,27 @@ def test_resolve_carries_stack_commands():
 def test_both_hosts_emit_the_same_beats_in_order():
     cfg = resolve("node")
     wp, gh = render_woodpecker(cfg), render_github(cfg)
-    for beat in ("setup", "lint", "test", "checks", "locks"):
+    for beat in ("hygiene", "setup", "lint", "test", "checks", "locks"):
         assert beat in wp and beat in gh
+
+
+def test_hygiene_gate_present_and_first_in_both_hosts():
+    # the hygiene (leak) gate is shipped by adoption, runs unconditionally, and is the FIRST prove
+    # beat so a leak fails fast; both hosts inherit it because both iterate prove_beats.
+    for render in (render_woodpecker, render_github):
+        out = render(resolve("node"))
+        assert "orrery-hygiene-gate.sh" in out
+        # first prove beat: hygiene appears before every other beat and before the lock gate
+        assert out.index("hygiene") < out.index("lint")
+        assert out.index("orrery-hygiene-gate.sh") < out.index("orrery-locks-gate.sh")
+
+
+def test_hygiene_gate_runs_unconditionally_not_if_f_skippable():
+    # unlike the lock gate it must NOT be wrapped in `if [ -f ... ]`: adoption ships it, so a repo
+    # that drops the script fails the build rather than silently skipping the leak-gate.
+    wp = render_woodpecker(resolve("node"))
+    assert "sh scripts/orrery-hygiene-gate.sh" in wp
+    assert "if [ -f scripts/orrery-hygiene-gate.sh ]" not in wp
 
 
 def test_lock_gate_is_always_present_even_for_a_stack_with_no_checks():
