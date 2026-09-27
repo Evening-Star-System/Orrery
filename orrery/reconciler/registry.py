@@ -12,6 +12,7 @@ from .checks.content_address import ContentAddressCheck
 from .checks.declared_presence import DeclaredPresenceCheck
 from .checks.fleet_reach import FleetReachCheck
 from .checks.floors import FloorsCheck
+from .checks.handoff_fresh import HandoffFreshnessCheck
 from .checks.managed_settings import ManagedSettingsCheck
 from .checks.memory_headroom import MemoryHeadroomCheck
 from .checks.org_map import OrgMapCheck
@@ -31,6 +32,7 @@ _REGISTRY: dict[str, Check] = {
     VaultCapabilityCheck.id: VaultCapabilityCheck(),
     BehaviorLockCheck.id: BehaviorLockCheck(),
     ContentAddressCheck.id: ContentAddressCheck(),
+    HandoffFreshnessCheck.id: HandoffFreshnessCheck(),
 }
 
 

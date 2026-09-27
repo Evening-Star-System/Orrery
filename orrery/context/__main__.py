@@ -24,6 +24,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--config", required=True, help="path to a TOML context config")
     parser.add_argument("--cwd", default=None, help="working dir (defaults to process cwd)")
     parser.add_argument("--json", action="store_true", help="emit JSON instead of text")
+    parser.add_argument("--consolidate", action="store_true",
+                        help="read a handoff block from stdin, write it to the scoped digest head (audited)")
+    parser.add_argument("--orient", action="store_true",
+                        help="print the current PICKUP handoff for this scope")
     args = parser.parse_args(argv)
 
     cwd = os.path.abspath(args.cwd or os.getcwd())
@@ -36,6 +40,20 @@ def main(argv: list[str] | None = None) -> int:
         else:
             print(message, file=sys.stderr)
         return EXIT_CONFIG_ERROR
+
+    if args.consolidate or args.orient:
+        from .handoff import read_handoff, write_handoff
+        if args.orient:
+            block = read_handoff(cwd, config)
+            print(block if block else "(no handoff yet)")
+            return 0
+        try:
+            res = write_handoff(cwd, config, sys.stdin.read())
+        except ValueError as exc:
+            print(f"consolidate error: {exc}", file=sys.stderr)
+            return EXIT_CONFIG_ERROR
+        print(json.dumps({"generated_by": "orrery-context", **res}, indent=2))
+        return 0
 
     bundle = resolve(cwd, config)
     if args.json:
