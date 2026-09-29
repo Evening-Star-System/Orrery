@@ -19,6 +19,12 @@ from typing import Protocol, runtime_checkable
 class Prober(Protocol):
     def can_reach(self, host: str, timeout: int) -> bool: ...
 
+    def read(self, host: str, command: str, timeout: int) -> "tuple[int, str]":
+        """Run a READ-ONLY command on host and return (returncode, stdout). Never mutates the
+        remote, never raises. The caller passes only fixed read-only probes (docker/ss/systemctl)
+        and a host it has already validated, so this stays read-only by contract."""
+        ...
+
 
 class SshProber:
     def can_reach(self, host: str, timeout: int) -> bool:
@@ -40,3 +46,24 @@ class SshProber:
             return result.returncode == 0
         except (subprocess.TimeoutExpired, OSError):
             return False
+
+    def read(self, host: str, command: str, timeout: int) -> "tuple[int, str]":
+        try:
+            result = subprocess.run(
+                [
+                    "ssh",
+                    "-o",
+                    "BatchMode=yes",
+                    "-o",
+                    f"ConnectTimeout={timeout}",
+                    "--",
+                    host,
+                    command,
+                ],
+                capture_output=True,
+                text=True,
+                timeout=timeout + 10,
+            )
+            return (result.returncode, result.stdout or "")
+        except (subprocess.TimeoutExpired, OSError):
+            return (255, "")

@@ -10,7 +10,9 @@ from .checks.base import Check
 from .checks.behavior_lock import BehaviorLockCheck
 from .checks.content_address import ContentAddressCheck
 from .checks.declared_presence import DeclaredPresenceCheck
+from .checks.deployed_image import DeployedImageCheck
 from .checks.fleet_reach import FleetReachCheck
+from .checks.guard_wiring import GuardWiringCheck
 from .checks.floors import FloorsCheck
 from .checks.handoff_fresh import HandoffFreshnessCheck
 from .checks.managed_settings import ManagedSettingsCheck
@@ -33,6 +35,8 @@ _REGISTRY: dict[str, Check] = {
     BehaviorLockCheck.id: BehaviorLockCheck(),
     ContentAddressCheck.id: ContentAddressCheck(),
     HandoffFreshnessCheck.id: HandoffFreshnessCheck(),
+    GuardWiringCheck.id: GuardWiringCheck(),
+    DeployedImageCheck.id: DeployedImageCheck(),
 }
 
 
